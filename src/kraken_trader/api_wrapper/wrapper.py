@@ -8,6 +8,7 @@ Notes:
         None
 """
 import copy
+import pprint
 from numbers import Number
 import krakenex
 
@@ -54,10 +55,12 @@ class Interface(object):
         else:
             return res
 
+
     ################################################
-    #Wallet Properties
+    #Wallet Propertie
     ################################################
 
+    @property
     def weighted_price(self):
         """Prints the weighted cost for each currency. Only need to consider cost (fee wrapped inside already)
 
@@ -80,7 +83,7 @@ class Interface(object):
 
         accum = {}
         for k in wallet.keys():
-            accum[k] = {'volume': 0, 'notional_value': 0}
+            accum[k] = {'volume': 0, 'notional': 0}
 
         while not wallet_zero(wallet):
 
@@ -141,5 +144,16 @@ class Interface(object):
         return float(self._exchange.query_private('TradeBalance')['result']['eb'])
 
     @property
-    def free_margin(self):
-        return float(self._exchange.query_private('TradeBalance')['result']['mf'])
+    def unallocated(self):
+        usd_total = float(self._exchange.query_private('Balance')['result']['ZUSD'])
+        open_orders = self._exchange.query_private('OpenOrders')
+
+        breakdown = {}
+        for _id, details in open_orders['result']['open'].items():
+            data = details['descr']
+            if data['type'] != 'buy':
+                continue  # skip sell orders
+            cur_amt = breakdown.get(data['pair'], 0)
+            order_notional = (float(data['price']) * float(details['vol']))
+            breakdown[data['pair']] = cur_amt + order_notional
+        return {'ZUSD': usd_total - sum(breakdown.values()), 'allocattions': breakdown}
