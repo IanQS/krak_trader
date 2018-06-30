@@ -1,7 +1,3 @@
-from kraken_trader.scraper.scraper_constants import STORAGE_PATH
-
-TEST_FILE = STORAGE_PATH.format('1529845070.3364222.npz')
-
 USD_ALIAS = {
     'XXRP': 'ZUSD',
     'XXLM': 'ZUSD',

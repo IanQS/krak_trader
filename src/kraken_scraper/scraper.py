@@ -3,11 +3,13 @@ import time
 import numpy as np
 
 import krakenex
-from kraken_trader.scraper.scraper_constants import STORAGE_SIZE, STORAGE_PATH, PAIRS_TO_STORE
+from kraken_scraper.scraper_constants import STORAGE_SIZE, PAIRS_TO_STORE
+from constants import STORAGE_PATH
+from tqdm import tqdm
 
 
 class Scraper(object):
-    def __init__(self, pairs:list, path: str):
+    def __init__(self, pairs: list, path: str):
         self.pairs = pairs
         self.path = path
         self.scraper = krakenex.API(key='', secret='')
@@ -18,13 +20,17 @@ class Scraper(object):
         processed_data['Time'] = []
         insertions = 0
         self.start = time.time()
+        display = tqdm(total=STORAGE_SIZE)
         while True:
+            if insertions % (0.05 * STORAGE_SIZE) == 0 and insertions != 0:  # Update TQDM every 5 %
+                display.update(insertions)
             res = self._grab_data()
             if res and not res['error']:
                 if insertions > STORAGE_SIZE:
                     processed_data, insertions = self.write_data(processed_data)
                     print('Time taken: {}s'.format(time.time() - self.start))
                     self.start = time.time()
+                    insertions = 0
                 else:
                     _process = self.process_data(res)
                     for k in _process.keys():
@@ -32,6 +38,7 @@ class Scraper(object):
                     insertions += 1
             else:
                 self._cleanup(res)
+                display.close()
 
     def write_data(self, processed_data: dict) -> tuple:
         processed_data = {k: np.asarray(v) for k, v in processed_data.items()}
@@ -57,14 +64,14 @@ class Scraper(object):
         return res
 
     def process_data(self, data_res: dict):
-        '''
+        """
         v = volume array(<today>, <last 24 hours>),
         p = volume weighted average price array(<today>, <last 24 hours>),
 
         :param data_res:
         :return:
             dict
-        '''
+        """
         ret = {}
         for k, v in data_res['result'].items():
             ret[k] = [*[float(prices) for prices in v['p']], * [float(volumes) for volumes in v['v']]]  #

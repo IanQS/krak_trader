@@ -1,0 +1,1 @@
+STORAGE_PATH = '/media/itq/kraken_data/{}'

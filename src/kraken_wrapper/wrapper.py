@@ -8,19 +8,17 @@ Notes:
         None
 """
 import copy
-import pprint
 from numbers import Number
 import krakenex
 
-from kraken_trader.utils import get_usd_pair_listing, wallet_zero, remove_counter
-from kraken_trader.api_key import key as CREDENTIALS
+from kraken_wrapper.utils import get_usd_pair_listing, wallet_zero, remove_counter
+from api_key import key as CREDENTIALS
 
 
 class Interface(object):
-    '''
-    Serves as a wrapper around the
-    '''
-
+    """
+    Serves as a wrapper around the Kraken API since it doesn't serve all the features I want
+    """
 
     def __init__(self):
         self._exchange = krakenex.API(
@@ -55,9 +53,16 @@ class Interface(object):
         else:
             return res
 
+    def bulk_limit_orders(self, low, allotment):
+        pass
+
+    def cancel_all_orders(self):
+        open_orders = self._exchange.query_private('OpenOrders')['result']['open']
+        for txid, details in open_orders.items():
+            self._exchange.query_private('CancelOrder', {'txid': txid})
 
     ################################################
-    #Wallet Propertie
+    # Wallet Propertie
     ################################################
 
     @property
@@ -75,7 +80,6 @@ class Interface(object):
             'XXRP': {'wallet': 2200.0, 'rate': 0.4571}
         }
         """
-
 
         # Setup
         wallet = copy.deepcopy(self.breakdown)
@@ -106,7 +110,7 @@ class Interface(object):
             accum[base]['notional'] += float(trade['cost'])
 
         for k, v in accum.items():
-            accum[k]['weighted'] = round(v['notional'] / (v['volume'] + 0.00000000000000000001), 2)
+            accum[k]['weighted'] = round(v['notional'] / (v['volume'] + 0.00000000000000000001), 6)
         return accum
 
     @property
@@ -156,4 +160,4 @@ class Interface(object):
             cur_amt = breakdown.get(data['pair'], 0)
             order_notional = (float(data['price']) * float(details['vol']))
             breakdown[data['pair']] = cur_amt + order_notional
-        return {'ZUSD': usd_total - sum(breakdown.values()), 'allocattions': breakdown}
+        return {'ZUSD': usd_total - sum(breakdown.values()), 'allocations': breakdown}

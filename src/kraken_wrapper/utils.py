@@ -1,6 +1,7 @@
 import time
 from typing import Callable
-from kraken_trader.constants import USD_ALIAS
+from kraken_wrapper.constants import USD_ALIAS
+
 
 def rate_limiter(refresh_period: int) -> Callable:
     """Limits the refresh period. Not all funcs need 100% accuracy
@@ -15,6 +16,7 @@ def rate_limiter(refresh_period: int) -> Callable:
     def decorator(func):
         last_call = -1
         last_res = None
+
         def rate_limited_func(*args, **kwargs):
             nonlocal last_call, last_res
             if time.time() - last_call > refresh_period:
@@ -42,6 +44,7 @@ def remove_counter(pair):
     else:
         assert len(zusd_split) == 2, '{} should be of length 2 but was {}'.format(zusd_split, len(zusd_split))
         return zusd_split[0]
+
 
 def wallet_zero(wallet):
     for k, v in wallet.items():
