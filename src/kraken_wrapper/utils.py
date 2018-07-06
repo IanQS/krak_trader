@@ -1,5 +1,7 @@
 import time
 from typing import Callable
+
+import numpy as np
 from kraken_wrapper.constants import USD_ALIAS
 
 
@@ -55,3 +57,4 @@ def wallet_zero(wallet):
 
 def get_usd_pair_listing(listing, alt_names=USD_ALIAS):
     return '{}{}'.format(listing, alt_names[listing])
+

@@ -4,10 +4,12 @@ generated
 
 Author: Ian Q
 """
+import sys
 
 import tensorflow as tf
 import numpy as np
 from kraken_brain.trader_configs import ALL_DATA
+from kraken_brain.utils import get_image_from_np
 
 class ConvAE(object):
     def __init__(self, sess: tf.Session, graph: tf.Graph, input_shape: tuple, batch_size: int,
@@ -22,7 +24,7 @@ class ConvAE(object):
         ################################################
         self.encoder = self.__construct_encoder(self.shape)
         self.decoder = self.__construct_decoder(self.encoder)
-        self.train_op = self.train()
+        self.cost, self.train_op = self.train()
 
     def __construct_encoder(self, input_shape: tuple):
         """
@@ -65,6 +67,7 @@ class ConvAE(object):
     def train(self):
         self.y_prime = tf.placeholder(tf.float32, self.shape, name='y_prime')
         pred = tf.nn.sigmoid(self.decoder)
+
         loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.y_prime, logits=pred)
 
         cost = tf.reduce_mean(loss)
@@ -76,17 +79,17 @@ if __name__ == '__main__':
     graph = tf.Graph()
     data = np.random.rand(100, 2, 2)
     BATCH_SIZE = 100
+    CURRENCY = 'XXRPZUSD'
     model = ConvAE(sess, graph, data.shape, BATCH_SIZE)
     sess.run(tf.global_variables_initializer())
 
-    all_data = [np.load(f)['XXRPZUSD'] for f in ALL_DATA][:5]
+    orderbook_data = [get_image_from_np(ALL_DATA, CURRENCY )]
 
-
-    for i in range(len(all_data) * 20):
-        curr_data = all_data[i % len(all_data)]
+    for i in range(len(orderbook_data) * 50):
+        curr_data = orderbook_data[i % len(orderbook_data)]
         data_shape = curr_data.shape[0]
         randomized = np.random.choice(data_shape, data_shape, replace=False)
         for _ in range(data_shape // BATCH_SIZE):
-            print(curr_data.shape)
             minibatch = curr_data[randomized[_ * BATCH_SIZE: (_ + 1) * BATCH_SIZE ], :]
-            sess.run([model.train_op], feed_dict={model.encoder_input: minibatch, model.y_prime: minibatch})
+            cost, x = sess.run([model.cost, model.train_op], feed_dict={model.encoder_input: minibatch, model.y_prime: minibatch})
+            print('{}: {}'.format(cost, x))
