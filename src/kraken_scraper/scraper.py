@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 import krakenex
-from kraken_scraper.scraper_constants import STORAGE_SIZE, PAIRS_TO_STORE
+from kraken_scraper.scraper_constants import STORAGE_SIZE, PAIRS_TO_STORE, FAULTS
 from constants import STORAGE_PATH
 from tqdm import tqdm
 import numpy as np
@@ -22,6 +22,7 @@ class Scraper(object):
         insertions = 0
         self.start = time.time()
         display = tqdm(total=STORAGE_SIZE)
+        errors = 0
         while True:
             # TQDM update
             if insertions % (0.05 * STORAGE_SIZE) == 0 and insertions != 0:  # Update TQDM every 5 %
@@ -34,8 +35,10 @@ class Scraper(object):
                 if insertions > STORAGE_SIZE:
                     processed_data, insertions = self.write_data(processed_data)
             else:
-                self._cleanup(res)
-                display.close()
+                errors += 1
+                if errors >= FAULTS:
+                    self._cleanup(res)
+
 
     def write_data(self, processed_data: dict) -> tuple:
         processed_data = {k: np.asarray(v) for k, v in processed_data.items()}
@@ -51,6 +54,7 @@ class Scraper(object):
         errors = (res, res['error'] if res else None)
         print(err_msg.format(*errors))
         self.scraper.close()
+        display.close()
         sys.exit(0)
 
     def _grab_data(self) -> dict:
