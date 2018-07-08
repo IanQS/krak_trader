@@ -24,6 +24,8 @@ def get_image_from_np(data_path: str, currency: str):
 def clear_tensorboard(path: str):
     path = path.replace('.', '')
     path = os.path.expanduser(os.getcwd() + path)
+    if not os.path.exists(path):
+        return
     for the_file in os.listdir(path):
         file_path = os.path.join(path, the_file)
         try:
