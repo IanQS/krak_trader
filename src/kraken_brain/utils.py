@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import os
 
 
 def get_image_from_np(data_path: str, currency: str):
@@ -19,3 +20,16 @@ def get_image_from_np(data_path: str, currency: str):
             )
     orderbook = np.asarray(orderbook)
     return orderbook
+
+def clear_tensorboard(path: str):
+    path = path.replace('.', '')
+    path = os.path.expanduser(os.getcwd() + path)
+    if not os.path.exists(path):
+        return
+    for the_file in os.listdir(path):
+        file_path = os.path.join(path, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(e)
