@@ -4,8 +4,6 @@ generated
 
 Author: Ian Q
 """
-import sys
-import time
 
 import tensorflow as tf
 import numpy as np
@@ -54,6 +52,7 @@ class ConvAE(object):
             fc1 = fullyConnected(do1, name='fc1', output_size=14 * 14 * 5)
             do2 = dropout(fc1, name='do2', keep_rate=0.75)
             fc2 = fullyConnected(do2, name='fc2', output_size=14 * 14)
+            return fc
 
     def __construct_decoder(self, last_encoder_op):
         """
