@@ -1,7 +1,6 @@
 import time
 from typing import Callable
 
-import numpy as np
 from kraken_wrapper.constants import USD_ALIAS
 
 
@@ -41,15 +40,17 @@ def remove_counter(pair):
     zusd_split = pair.split('ZUSD')
     if len(zusd_split) == 1:
         usd_split = pair.split('USD')
-        assert len(usd_split) == 2, '{} should be of length 2 but was {}'.format(usd_split, len(usd_split))
+        if len(usd_split) != 2:
+            raise ValueError('{} should be of length 2 but was {}'.format(usd_split, len(usd_split)))
         return usd_split[0]
     else:
-        assert len(zusd_split) == 2, '{} should be of length 2 but was {}'.format(zusd_split, len(zusd_split))
+        if len(zusd_split) != 2:
+            raise ValueError('{} should be of length 2 but was {}'.format(zusd_split, len(zusd_split)))
         return zusd_split[0]
 
 
 def wallet_zero(wallet):
-    for k, v in wallet.items():
+    for _, v in wallet.items():
         if v['volume'] >= 0.001:
             return False
     return True

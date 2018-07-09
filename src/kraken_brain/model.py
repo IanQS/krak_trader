@@ -11,10 +11,7 @@ Notes:
     None
 """
 
-import tensorflow as tf
-
-from kraken_brain.trader_configs import TEST_FILE
-from kraken_brain.network.convolutional import Convolutional
+from kraken_brain.trader_configs import LARGE_TEST_FILE
 
 class Brain(object):
     """
@@ -25,11 +22,11 @@ class Brain(object):
 
         self.train, self.predict = self._construct_model()
 
+    @staticmethod
     def _construct_model(self):
-
         return None, None
 
 
 if __name__ == '__main__':
-    f_ = TEST_FILE
+    f_ = LARGE_TEST_FILE
     model = Brain([f_])

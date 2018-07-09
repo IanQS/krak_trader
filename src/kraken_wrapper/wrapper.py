@@ -58,7 +58,7 @@ class Interface(object):
 
     def cancel_all_orders(self):
         open_orders = self._exchange.query_private('OpenOrders')['result']['open']
-        for txid, details in open_orders.items():
+        for txid, _ in open_orders.items():
             self._exchange.query_private('CancelOrder', {'txid': txid})
 
     ################################################

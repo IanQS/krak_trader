@@ -70,12 +70,13 @@ class Scraper(object):
             print('Error querying Ticker data: {}'.format(e))
             time.sleep(1)
             res = self.scraper.query_public('Ticker', {'pair': ','.join(self.pairs)})
-        assert res is not None
+        if res is None:
+            raise TypeError('Result from ticker query should not be None')
 
         ################################################
         # Get orderbook data
         ################################################
-        for k, v in res['result'].items():
+        for k in res['result'].keys():
             try:
                 response = self.scraper.query_public('Depth', {'pair': k, 'count': 100})
             except Exception as e:
