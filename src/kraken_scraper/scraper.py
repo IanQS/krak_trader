@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import numpy as np
@@ -6,7 +7,6 @@ import krakenex
 from kraken_scraper.scraper_constants import STORAGE_SIZE, PAIRS_TO_STORE, FAULTS
 from constants import STORAGE_PATH
 from tqdm import tqdm
-import numpy as np
 
 
 class Scraper(object):
@@ -25,31 +25,32 @@ class Scraper(object):
         errors = 0
         while True:
             # TQDM update
-            if insertions % (0.05 * STORAGE_SIZE) == 0 and insertions != 0:  # Update TQDM every 5 %
-                display.update(insertions)
-
+            display.update(1)
             # Scraping
             res = self._grab_data()
             if res and not res['error']:
                 processed_data, insertions = self.process_data(res, processed_data, insertions)
                 if insertions > STORAGE_SIZE:
+                    display.close()
                     processed_data, insertions = self.write_data(processed_data)
+                    display = tqdm(total=STORAGE_SIZE)
             else:
                 errors += 1
                 if errors >= FAULTS:
-                    self._cleanup(res)
+                    self._cleanup(res, display)
 
 
     def write_data(self, processed_data: dict) -> tuple:
+        print('Entered write!')
         processed_data = {k: np.asarray(v) for k, v in processed_data.items()}
-        np.savez_compressed(self.path.format(time.time()), **processed_data)
+
+        np.savez(self.path.format(time.time()), **processed_data)
         processed_data = {k: [] for k in processed_data.keys()}
 
-        print('Time taken: {}s'.format(time.time() - self.start))
         self.start = time.time()
         return processed_data, 0
 
-    def _cleanup(self, res: dict) -> None:
+    def _cleanup(self, res: dict, display) -> None:
         err_msg = 'Scraped data error: res: {}, res[error]: {}'
         errors = (res, res['error'] if res else None)
         print(err_msg.format(*errors))
