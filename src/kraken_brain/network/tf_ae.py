@@ -6,8 +6,9 @@ Author: Ian Q
 """
 import tensorflow as tf
 import numpy as np
+from kraken_brain.network.pca import custom_scale
 from kraken_brain.trader_configs import ALL_DATA, SUMMARY_PATH, CONV_INPUT_SHAPE
-from kraken_brain.utils import get_image_from_np, clear_tensorboard
+from kraken_brain.utils import get_image_from_np, clear_tensorboard, custom_scale
 from tqdm import tqdm
 
 
@@ -77,7 +78,7 @@ class Autoencoder(object):
 
     def train(self, orderbook_data):
         total_runs = 0
-        for i in tqdm(range(len(orderbook_data) * 10000)):
+        for i in tqdm(range(len(orderbook_data) * 20)):
             curr_data = orderbook_data[i % len(orderbook_data)]
             data_shape = curr_data.shape[0]
             randomized = np.random.choice(data_shape, data_shape, replace=False)
@@ -88,6 +89,8 @@ class Autoencoder(object):
                                    feed_dict={self.encoder_input: minibatch})
                 self.file_writer.add_summary(summary, total_runs)
 
+    def validate(self):
+        pass
 
 if __name__ == '__main__':
     tf.reset_default_graph()
@@ -95,7 +98,8 @@ if __name__ == '__main__':
     graph = tf.Graph()
     BATCH_SIZE = 100
     CURRENCY = 'XXRPZUSD'
-    model = Autoencoder(sess, graph, CONV_INPUT_SHAPE, BATCH_SIZE, debug=True)
+    model = Autoencoder(sess, graph, (100, 4), BATCH_SIZE, debug=True)
 
-    data = [get_image_from_np(ALL_DATA, CURRENCY)]
+    data = get_image_from_np(ALL_DATA, CURRENCY)
+    data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
     model.train(data)
