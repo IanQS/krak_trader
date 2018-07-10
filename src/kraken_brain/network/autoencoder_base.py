@@ -32,7 +32,7 @@ class Autoencoder(ABC):
         # Construct Graph
         ################################################
         with tf.variable_scope('autoencoder'):
-            self.encoder_input = tf.placeholder(tf.float32, input_shape, name='x')
+            self.encoder_input = None
             self.encoder = self._construct_encoder(self.shape)
             self.decoder = self._construct_decoder(self.encoder)
             self.cost, self.train_op, self.validation = self._train_construction

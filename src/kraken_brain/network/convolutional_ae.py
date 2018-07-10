@@ -1,5 +1,5 @@
 """
-Vanilla auto-encoder, then we remove the decoder and use the
+Conv auto-encoder, then we remove the decoder and use the
 generated
 
 Author: Ian Q
@@ -10,7 +10,7 @@ from kraken_brain.trader_configs import ALL_DATA
 from kraken_brain.utils import get_image_from_np, custom_scale
 
 
-class FullyConnectedAE(Autoencoder):
+class ConvolutionalAE(Autoencoder):
     def __init__(self, *args, **kwargs):
         kwargs['name'] = self.__class__.__name__
         super().__init__(*args, **kwargs)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 256
     CURRENCY = 'XXRPZUSD'
     EPOCHS = 50
-    model = FullyConnectedAE(sess, graph, (100, 4), BATCH_SIZE, debug=True, epochs=EPOCHS)
+    model = ConvolutionalAE(sess, graph, (100, 4), BATCH_SIZE, debug=True, epochs=EPOCHS)
 
     ################################################
     # Data processing steps
