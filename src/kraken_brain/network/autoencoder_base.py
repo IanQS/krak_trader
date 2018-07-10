@@ -1,20 +1,26 @@
 """
-Trained as a convolutional auto-encoder, then we remove the decoder and use the
-generated
+Base autoencoder class. Implements most things generically, so the user should
+only need to override
 
 Author: Ian Q
 """
 import tensorflow as tf
 import numpy as np
-from kraken_brain.utils import custom_scale
-from kraken_brain.trader_configs import ALL_DATA, SUMMARY_PATH, CONV_INPUT_SHAPE
-from kraken_brain.utils import get_image_from_np, clear_tensorboard, custom_scale
+from kraken_brain.trader_configs import SUMMARY_PATH
+from kraken_brain.utils import clear_tensorboard
 from tqdm import tqdm
+from abc import ABC, abstractmethod
 
 
-class Autoencoder(object):
+class Autoencoder(ABC):
+    """
+    Fully Connected Autoencoder.
+
+    In theory, all the steps should be the same except for construct encoder and construct decoder
+    which you can overwrite
+    """
     def __init__(self, sess: tf.InteractiveSession, graph: tf.Graph, input_shape: tuple, batch_size: int,
-                 debug: bool, lr: float = 0.1, epochs=20):
+                 debug: bool, lr: float = 0.1, epochs=20, name=None):
         self.sess = sess
         self.graph = graph
         self.batch_size = batch_size
@@ -26,8 +32,9 @@ class Autoencoder(object):
         # Construct Graph
         ################################################
         with tf.variable_scope('autoencoder'):
-            self.encoder = self.__construct_encoder(self.shape)
-            self.decoder = self.__construct_decoder(self.encoder)
+            self.encoder_input = tf.placeholder(tf.float32, input_shape, name='x')
+            self.encoder = self._construct_encoder(self.shape)
+            self.decoder = self._construct_decoder(self.encoder)
             self.cost, self.train_op, self.validation = self._train_construction
 
         ################################################
@@ -35,32 +42,20 @@ class Autoencoder(object):
         ################################################
         self.sess.run(tf.global_variables_initializer())
         self.sess.run(tf.local_variables_initializer())
-        summary_path = SUMMARY_PATH.format(self.__class__.__name__)
+        summary_path = SUMMARY_PATH.format(self.__class__.__name__ if name is None else name)
 
         if debug:  # Clear contents of summary_path if there are contents
             clear_tensorboard(summary_path)
         self.file_writer = tf.summary.FileWriter(summary_path, self.sess.graph)
         self.summ = tf.summary.merge_all()
 
-    def __construct_encoder(self, input_shape: tuple):
-        """
-        :param input_shape: # 100 x 2 x 2 (OB, price-vol, bids-asks)
-        :return:
-        """
-        self.encoder_input = tf.placeholder(tf.float32, input_shape, name='x')
-        with tf.variable_scope("encoder"):
-            flattened = tf.layers.flatten(self.encoder_input)
-            e_fc_1 = tf.layers.dense(flattened, units=150, activation=tf.nn.relu)
-            encoded = tf.layers.dense(e_fc_1, units=75, activation=None)
-            # Now 25x1x16
-            return encoded
+    @abstractmethod
+    def _construct_encoder(self, input_shape: tuple):
+        raise NotImplementedError
 
-    def __construct_decoder(self, encoded):
-        with tf.variable_scope("decoder"):
-            d_fc_1 = tf.layers.dense(encoded, 150, activation=tf.nn.relu)
-            d_fc_2 = tf.layers.dense(d_fc_1, 400, activation=None)
-            decoded = tf.reshape(d_fc_2, self.shape)
-            return decoded
+    @abstractmethod
+    def _construct_decoder(self, encoded):
+        raise NotImplementedError
 
     @property
     def _train_construction(self):
@@ -90,11 +85,11 @@ class Autoencoder(object):
             ################################################
             batch_length = len(orderbook_data)
             randomized = np.random.choice(batch_length, batch_length, replace=False)
-            for j, mb in enumerate(range(batch_length // BATCH_SIZE)):
+            for j, mb in enumerate(range(batch_length // self.batch_size)):
                 total_runs += 1
-                minibatch = orderbook_data[randomized[mb * BATCH_SIZE: (mb + 1) * BATCH_SIZE], :]
+                minibatch = orderbook_data[randomized[mb * self.batch_size: (mb + 1) * self.batch_size], :]
                 summary, x = self.sess.run([self.summ, self.train_op],
-                                   feed_dict={self.encoder_input: minibatch})
+                                           feed_dict={self.encoder_input: minibatch})
                 self.file_writer.add_summary(summary, total_runs)
 
             ################################################
@@ -102,24 +97,3 @@ class Autoencoder(object):
             ################################################
             score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation_data})
             print("Validation Error: Step {} Error: {}".format(i, score))
-
-
-if __name__ == '__main__':
-    tf.reset_default_graph()
-    sess = tf.InteractiveSession()
-    graph = tf.Graph()
-    BATCH_SIZE = 256
-    CURRENCY = 'XXRPZUSD'
-    EPOCHS = 50
-    model = Autoencoder(sess, graph, (100, 4), BATCH_SIZE, debug=True, epochs=EPOCHS)
-
-    ################################################
-    # Data processing steps
-    ################################################
-    data = get_image_from_np(ALL_DATA, CURRENCY)
-    # Scale the data axis-wise
-    data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
-    validation_data, data = data[:BATCH_SIZE, :],  data[BATCH_SIZE:, :]
-
-    # train, then validate
-    model.train(data, validation_data)
