@@ -18,7 +18,7 @@ if __name__ == '__main__':
     data = get_image_from_np(ALL_DATA, CURRENCY)
     normed_data = custom_scale(data, (data[0].shape[0], 100 * 2 * 2))
     model = PCA(n_components=20)
-    X_reduce = model.fit_transform(normed_data[0])
+    X_reduce = model.fit_transform(normed_data)
 
     print(model.explained_variance_)
     print(model.explained_variance_ratio_.sum())

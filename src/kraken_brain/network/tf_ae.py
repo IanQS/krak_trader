@@ -6,7 +6,7 @@ Author: Ian Q
 """
 import tensorflow as tf
 import numpy as np
-from kraken_brain.network.pca import custom_scale
+from kraken_brain.utils import custom_scale
 from kraken_brain.trader_configs import ALL_DATA, SUMMARY_PATH, CONV_INPUT_SHAPE
 from kraken_brain.utils import get_image_from_np, clear_tensorboard, custom_scale
 from tqdm import tqdm
@@ -14,12 +14,13 @@ from tqdm import tqdm
 
 class Autoencoder(object):
     def __init__(self, sess: tf.InteractiveSession, graph: tf.Graph, input_shape: tuple, batch_size: int,
-                 debug: bool, lr: float = 0.1):
+                 debug: bool, lr: float = 0.1, epochs=20):
         self.sess = sess
         self.graph = graph
         self.batch_size = batch_size
         self.shape = (batch_size, *input_shape)
         self.lr = lr
+        self.epochs = epochs
 
         ################################################
         # Construct Graph
@@ -27,12 +28,13 @@ class Autoencoder(object):
         with tf.variable_scope('autoencoder'):
             self.encoder = self.__construct_encoder(self.shape)
             self.decoder = self.__construct_decoder(self.encoder)
-            self.cost, self.train_op = self.__train_op
+            self.cost, self.train_op, self.validation = self._metric_construction
 
         ################################################
         # Construct loggers
         ################################################
         self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.local_variables_initializer())
         summary_path = SUMMARY_PATH.format(self.__class__.__name__)
 
         if debug:  # Clear contents of summary_path if there are contents
@@ -61,7 +63,7 @@ class Autoencoder(object):
             return decoded
 
     @property
-    def __train_op(self):
+    def _metric_construction(self):
         loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         cost = tf.reduce_mean(loss)
 
@@ -74,32 +76,51 @@ class Autoencoder(object):
         # Save the grads with tf.summary.histogram
         for index, grad in enumerate(grads):
             tf.summary.histogram("{}-grad".format(grads[index][1].name), grads[index])
-        return cost, optimizer
 
-    def train(self, orderbook_data):
+        validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
+        tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns 2 vals
+        return cost, optimizer, validation_score
+
+    def train(self, orderbook_data, validation_data):
         total_runs = 0
-        for i in tqdm(range(len(orderbook_data) * 20)):
-            curr_data = orderbook_data[i % len(orderbook_data)]
-            data_shape = curr_data.shape[0]
-            randomized = np.random.choice(data_shape, data_shape, replace=False)
-            for j, mb in enumerate(range(data_shape // BATCH_SIZE)):
+        for i in tqdm(range(self.epochs)):
+
+            ################################################
+            # Train the model
+            ################################################
+            batch_length = len(orderbook_data)
+            randomized = np.random.choice(batch_length, batch_length, replace=False)
+            for j, mb in enumerate(range(batch_length // BATCH_SIZE)):
                 total_runs += 1
-                minibatch = curr_data[randomized[mb * BATCH_SIZE: (mb + 1) * BATCH_SIZE], :]
-                summary, x = sess.run([self.summ, self.train_op],
+                minibatch = orderbook_data[randomized[mb * BATCH_SIZE: (mb + 1) * BATCH_SIZE], :]
+                summary, x = self.sess.run([self.summ, self.train_op],
                                    feed_dict={self.encoder_input: minibatch})
                 self.file_writer.add_summary(summary, total_runs)
 
-    def validate(self):
-        pass
+            ################################################
+            # Validate on fixed number of points
+            ################################################
+            score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation_data})
+
+            print("Validation Error: Step {} Error: {}".format(i, score))
+
 
 if __name__ == '__main__':
     tf.reset_default_graph()
     sess = tf.InteractiveSession()
     graph = tf.Graph()
-    BATCH_SIZE = 100
+    BATCH_SIZE = 256
     CURRENCY = 'XXRPZUSD'
-    model = Autoencoder(sess, graph, (100, 4), BATCH_SIZE, debug=True)
+    EPOCHS = 50
+    model = Autoencoder(sess, graph, (100, 4), BATCH_SIZE, debug=True, epochs=EPOCHS)
 
+    ################################################
+    # Data processing steps
+    ################################################
     data = get_image_from_np(ALL_DATA, CURRENCY)
+    # Scale the data axis-wise
     data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
-    model.train(data)
+    validation_data, data = data[:BATCH_SIZE, :],  data[BATCH_SIZE:, :]
+
+    # train, then validate
+    model.train(data, validation_data)

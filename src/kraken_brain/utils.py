@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from sklearn.preprocessing import minmax_scale
+from sklearn.preprocessing import minmax_scale, robust_scale, normalize
 
 
 def get_image_from_np(data_path: str, currency: str) -> list:
@@ -21,16 +21,16 @@ def get_image_from_np(data_path: str, currency: str) -> list:
     orderbook = np.asarray(orderbook)
     return [orderbook]
 
-def custom_scale(data: np.array, final_shape: tuple):
+def custom_scale(data: np.array, final_shape: tuple) -> np.ndarray:
     if isinstance(data, list):
         data = data[0]
     holder = []
     for outer in [0, 1]:  # bids or asks
         for inner in [0, 1]:  # price or vol
             data_ = data[:, :, inner, outer]
-            holder.append(minmax_scale(data_))
+            holder.append(normalize(data_))
     data = np.moveaxis(np.asarray(holder), 0, -1)
-    return [data.reshape(final_shape)]
+    return data.reshape(final_shape)
 
 def clear_tensorboard(path: str):
     path = path.replace('.', '')

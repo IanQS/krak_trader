@@ -6,7 +6,7 @@ Author: Ian Q
 import keras
 from kraken_brain.trader_configs import ALL_DATA
 from kraken_brain.utils import get_image_from_np
-from kraken_brain.network.pca import custom_scale
+from kraken_brain.utils import custom_scale
 
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D, Flatten, Reshape
 from keras.layers.normalization import BatchNormalization
@@ -38,6 +38,6 @@ if __name__ == '__main__':
     autoencoder.summary()
     autoencoder.compile(optimizer='adam', loss='mean_squared_error')
     autoencoder.fit(data, data,
-                    epochs=50,
+                    epochs=25,
                     batch_size=256,
                     shuffle=True, )
