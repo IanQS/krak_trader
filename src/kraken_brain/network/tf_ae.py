@@ -28,7 +28,7 @@ class Autoencoder(object):
         with tf.variable_scope('autoencoder'):
             self.encoder = self.__construct_encoder(self.shape)
             self.decoder = self.__construct_decoder(self.encoder)
-            self.cost, self.train_op, self.validation = self._metric_construction
+            self.cost, self.train_op, self.validation = self._train_construction
 
         ################################################
         # Construct loggers
@@ -63,7 +63,7 @@ class Autoencoder(object):
             return decoded
 
     @property
-    def _metric_construction(self):
+    def _train_construction(self):
         loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         cost = tf.reduce_mean(loss)
 
@@ -101,7 +101,6 @@ class Autoencoder(object):
             # Validate on fixed number of points
             ################################################
             score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation_data})
-
             print("Validation Error: Step {} Error: {}".format(i, score))
 
 
