@@ -6,34 +6,66 @@ Author: Ian Q
 """
 from kraken_brain.network.autoencoder_base import Autoencoder
 import tensorflow as tf
-from kraken_brain.trader_configs import ALL_DATA
+from kraken_brain.trader_configs import ALL_DATA, CONV_INPUT_SHAPE
 from kraken_brain.utils import get_image_from_np, custom_scale
 
 
 class ConvolutionalAE(Autoencoder):
     def __init__(self, *args, **kwargs):
         kwargs['name'] = self.__class__.__name__
+        self.regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
         super().__init__(*args, **kwargs)
 
+
     def _construct_encoder(self, input_shape: tuple):
-        """
-        :param input_shape: # 100 x 2 x 2 (OB, price-vol, bids-asks)
-        :return:
-        """
         self.encoder_input = tf.placeholder(tf.float32, input_shape, name='x')
+
         with tf.variable_scope("encoder"):
-            flattened = tf.layers.flatten(self.encoder_input)
-            e_fc_1 = tf.layers.dense(flattened, units=150, activation=tf.nn.relu)
-            encoded = tf.layers.dense(e_fc_1, units=75, activation=None)
-            # Now 25x1x16
-            return encoded
+            conv1 = tf.layers.conv2d(self.encoder_input, filters=32, kernel_size=(2, 2),
+                                     activation=tf.nn.relu, padding='same', kernel_regularizer=self.regularizer)
+            # (#, 100, 2, 32)
+            mp1 = tf.layers.max_pooling2d(conv1, pool_size=(4, 1), strides=(1, 1))
+            # (#, 25, 2, 32)
+            conv2 = tf.layers.conv2d(mp1, filters=64, kernel_size=(2, 2),
+                                     activation=None, padding='same', kernel_regularizer=self.regularizer)
+            # (#, 25, 2, 64)
+            return conv2
 
     def _construct_decoder(self, encoded):
         with tf.variable_scope("decoder"):
-            d_fc_1 = tf.layers.dense(encoded, 150, activation=tf.nn.relu)
-            d_fc_2 = tf.layers.dense(d_fc_1, 400, activation=None)
-            decoded = tf.reshape(d_fc_2, self.shape)
-            return decoded
+            upsample1 = tf.image.resize_images(encoded, size=(50, 2), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+            # (#, 50, 2, 64)
+            conv4 = tf.layers.conv2d(inputs=upsample1, filters=32, kernel_size=(2, 2), padding='same',
+                                     activation=tf.nn.relu, kernel_regularizer=self.regularizer)
+            # (#, 50, 2, 32)
+            upsample2 = tf.image.resize_images(conv4, size=(100, 2), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+            # (#, 100, 2, 32)
+            conv5 = tf.layers.conv2d(inputs=upsample2, filters=2, kernel_size=(2, 2), padding='same',
+                                     activation=None, kernel_regularizer=self.regularizer)
+            # (#, 100, 2, 2)
+            return conv5
+
+    @property
+    def _train_construction(self):
+        base_loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
+        reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        loss = tf.add_n([base_loss] + reg_losses, name="loss")
+
+        cost = tf.reduce_mean(loss)
+
+        tf.summary.scalar('cost', cost)
+        optimizer = tf.train.AdamOptimizer(self.lr)
+
+        grads = optimizer.compute_gradients(cost)
+        # Update the weights wrt to the gradient
+        optimizer = optimizer.apply_gradients(grads)
+        # Save the grads with tf.summary.histogram
+        for index, grad in enumerate(grads):
+            tf.summary.histogram("{}-grad".format(grads[index][1].name), grads[index])
+
+        validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
+        tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns tuple
+        return cost, optimizer, validation_score
 
 
 if __name__ == '__main__':
@@ -43,15 +75,14 @@ if __name__ == '__main__':
     BATCH_SIZE = 256
     CURRENCY = 'XXRPZUSD'
     EPOCHS = 50
-    model = ConvolutionalAE(sess, graph, (100, 4), BATCH_SIZE, debug=True, epochs=EPOCHS)
+    model = ConvolutionalAE(sess, graph, CONV_INPUT_SHAPE, BATCH_SIZE, debug=True, epochs=EPOCHS)
 
     ################################################
     # Data processing steps
     ################################################
     data = get_image_from_np(ALL_DATA, CURRENCY)
     # Scale the data axis-wise
-    data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
+    data = custom_scale(data, (data[0].shape[0], *CONV_INPUT_SHAPE))
     validation_data, data = data[:BATCH_SIZE, :],  data[BATCH_SIZE:, :]
-
     # train, then validate
     model.train(data, validation_data)
