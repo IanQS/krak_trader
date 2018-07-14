@@ -65,7 +65,13 @@ class ConvolutionalAE(Autoencoder):
 
         validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns tuple
-        return cost, optimizer, validation_score
+
+        im_plot = (self.decoder - self.encoder_input)[0:1]
+        asks = im_plot[:, :, :, 0:1]
+        bids = im_plot[:, :, :, 1:2]
+        tf.summary.image('asks', asks)
+        tf.summary.image('bids', bids)
+        return cost, optimizer, validation_score, im_plot
 
 
 if __name__ == '__main__':

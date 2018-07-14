@@ -35,7 +35,7 @@ class Autoencoder(ABC):
             self.encoder_input = None
             self.encoder = self._construct_encoder(self.shape)
             self.decoder = self._construct_decoder(self.encoder)
-            self.cost, self.train_op, self.validation = self._train_construction
+            self.cost, self.train_op, self.validation, self.validation_image = self._train_construction
 
         ################################################
         # Construct loggers
@@ -57,6 +57,7 @@ class Autoencoder(ABC):
     def _construct_decoder(self, encoded):
         raise NotImplementedError
 
+
     @property
     def _train_construction(self):
         loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
@@ -74,7 +75,14 @@ class Autoencoder(ABC):
 
         validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns 2 vals
-        return cost, optimizer, validation_score
+
+
+        im_plot = (self.decoder - self.encoder_input)[0:1]
+        asks = im_plot[:, :, :, 0:1]
+        bids = im_plot[:, :, :, 1:2]
+        tf.summary.image('asks', asks)
+        tf.summary.image('bids', bids)
+        return cost, optimizer, validation_score, im_plot
 
     def train(self, orderbook_data, validation_data):
         total_runs = 0
@@ -96,5 +104,6 @@ class Autoencoder(ABC):
             # Validate on fixed number of points
             ################################################
             validation = validation_data[np.random.choice(len(validation_data), self.batch_size)]
-            score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation})
+            score, _ = self.sess.run([self.validation, self.validation_image],
+                                     feed_dict={self.encoder_input: validation})
             print("\nValidation Error: Step {} Error: {}\n".format(i, score))
