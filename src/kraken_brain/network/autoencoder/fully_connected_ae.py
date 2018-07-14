@@ -4,10 +4,10 @@ generated
 
 Author: Ian Q
 """
-from kraken_brain.network.autoencoder_base import Autoencoder
+from kraken_brain.network.autoencoder.autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.utils import get_image_from_np, custom_scale
+from kraken_brain.utils import get_image_from_np, custom_scale, split_data
 
 
 class FullyConnectedAE(Autoencoder):
@@ -51,7 +51,6 @@ if __name__ == '__main__':
     data = get_image_from_np(ALL_DATA, CURRENCY)
     # Scale the data axis-wise
     data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
-    validation_data, data = data[:BATCH_SIZE, :],  data[BATCH_SIZE:, :]
-
+    data, validation_data = split_data(data, BATCH_SIZE, maintain_temporal=False)
     # train, then validate
     model.train(data, validation_data)

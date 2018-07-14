@@ -3,6 +3,8 @@
 .idea/
 summaries/
 
+persistent_tmp/
+
 # api
 
 api_key.py

@@ -44,3 +44,19 @@ def clear_tensorboard(path: str):
                 os.unlink(file_path)
         except Exception as e:
             print(e)
+
+def split_data(data: np.array, batch_size: int, maintain_temporal: bool = True) -> tuple:
+    """ Splits data into training and validation. Currently only supports
+    returning validation size of batch_size.
+
+    Supports both RNN and CNN. maintain_temporal assures that whatever index we choose from,
+    validation = data[x: x + batch_size] for RNN
+    """
+    if maintain_temporal:
+        indices = np.random.choice(np.arange(len(data) - batch_size), size=1)
+        indices = np.arange(indices, indices + batch_size)
+    else:
+        indices = np.random.choice(np.arange(len(data)), batch_size)
+    indices_complement = np.delete(np.arange(len(data)), np.r_[indices])
+
+    return data[indices_complement], data[indices]
