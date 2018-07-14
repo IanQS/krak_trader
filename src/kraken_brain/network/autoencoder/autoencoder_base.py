@@ -8,8 +8,8 @@ import tensorflow as tf
 import numpy as np
 from kraken_brain.trader_configs import SUMMARY_PATH
 from kraken_brain.utils import clear_tensorboard
-from tqdm import tqdm
 from abc import ABC, abstractmethod
+from tqdm import trange
 
 
 class Autoencoder(ABC):
@@ -78,14 +78,14 @@ class Autoencoder(ABC):
 
     def train(self, orderbook_data, validation_data):
         total_runs = 0
-        for i in tqdm(range(self.epochs)):
+        for i in trange(self.epochs, desc='Epochs'):
 
             ################################################
             # Train the model
             ################################################
             batch_length = len(orderbook_data)
             randomized = np.random.choice(batch_length, batch_length, replace=False)
-            for j, mb in enumerate(range(batch_length // self.batch_size)):
+            for mb in trange(batch_length // self.batch_size, desc='Minibatch', leave=True):
                 total_runs += 1
                 minibatch = orderbook_data[randomized[mb * self.batch_size: (mb + 1) * self.batch_size], :]
                 summary, x = self.sess.run([self.summ, self.train_op],
@@ -95,5 +95,6 @@ class Autoencoder(ABC):
             ################################################
             # Validate on fixed number of points
             ################################################
-            score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation_data})
-            print("Validation Error: Step {} Error: {}".format(i, score))
+            validation = validation_data[np.random.choice(len(validation_data), self.batch_size)]
+            score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation})
+            print("\nValidation Error: Step {} Error: {}\n".format(i, score))

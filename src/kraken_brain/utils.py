@@ -59,4 +59,5 @@ def split_data(data: np.array, batch_size: int, maintain_temporal: bool = True) 
         indices = np.random.choice(np.arange(len(data)), batch_size)
     indices_complement = np.delete(np.arange(len(data)), np.r_[indices])
 
+    print('Train-Val Split: {}-{}'.format(len(indices_complement) // len(indices), 1))
     return data[indices_complement], data[indices]

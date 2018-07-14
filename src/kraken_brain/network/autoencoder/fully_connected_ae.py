@@ -51,6 +51,6 @@ if __name__ == '__main__':
     data = get_image_from_np(ALL_DATA, CURRENCY)
     # Scale the data axis-wise
     data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
-    data, validation_data = split_data(data, BATCH_SIZE, maintain_temporal=False)
+    data, validation_data = split_data(data, BATCH_SIZE * 100, maintain_temporal=False)
     # train, then validate
     model.train(data, validation_data)
