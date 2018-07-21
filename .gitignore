@@ -4,6 +4,7 @@
 summaries/
 
 persistent_tmp/
+.ipynb_checkpoints
 
 # api
 

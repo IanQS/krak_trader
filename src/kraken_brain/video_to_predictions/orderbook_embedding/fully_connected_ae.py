@@ -7,7 +7,8 @@ Author: Ian Q
 from .autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries
+from kraken_brain.utils import variable_summaries
+from kraken_brain.video_to_predictions.orderbook_embedding.utils import split_data, get_image_from_np, custom_scale
 
 
 class FullyConnectedAE(Autoencoder):
