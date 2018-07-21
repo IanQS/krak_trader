@@ -12,7 +12,7 @@ from kraken_brain.utils import get_image_from_np, custom_scale, split_data, vari
 
 class ConvolutionalAE(Autoencoder):
     def __init__(self, *args, **kwargs):
-        kwargs['name'] = self.__class__.__name__ + '_diff'
+        kwargs['name'] = self.__class__.__name__
         self.regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
         super().__init__(*args, **kwargs)
 

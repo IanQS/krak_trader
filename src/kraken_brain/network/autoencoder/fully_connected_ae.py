@@ -12,7 +12,7 @@ from kraken_brain.utils import get_image_from_np, custom_scale, split_data, vari
 
 class FullyConnectedAE(Autoencoder):
     def __init__(self, *args, **kwargs):
-        kwargs['name'] = self.__class__.__name__ + '_diff'
+        kwargs['name'] = self.__class__.__name__
         super().__init__(*args, **kwargs)
 
     def _construct_encoder(self, input_shape: tuple):
