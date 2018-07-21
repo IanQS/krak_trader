@@ -1,5 +1,5 @@
 """
-Base RNN class. Implements most things generically, so the user should
+Base orderbook_embedding class. Implements most things generically, so the user should
 only need to override
 
 Author: Ian Q
@@ -8,8 +8,8 @@ import tensorflow as tf
 import numpy as np
 from kraken_brain.trader_configs import SUMMARY_PATH
 from kraken_brain.utils import clear_tensorboard
-from tqdm import tqdm
 from abc import ABC, abstractmethod
+from tqdm import trange
 
 
 class Autoencoder(ABC):
@@ -31,11 +31,11 @@ class Autoencoder(ABC):
         ################################################
         # Construct Graph
         ################################################
-        with tf.variable_scope('autoencoder'):
+        with tf.variable_scope('orderbook_embedding'):
             self.encoder_input = None
             self.encoder = self._construct_encoder(self.shape)
             self.decoder = self._construct_decoder(self.encoder)
-            self.cost, self.train_op, self.validation = self._train_construction
+            self.cost, self.train_op, self.validation, self.validation_image = self.train_construction
 
         ################################################
         # Construct loggers
@@ -57,10 +57,16 @@ class Autoencoder(ABC):
     def _construct_decoder(self, encoded):
         raise NotImplementedError
 
-    @property
-    def _train_construction(self):
-        loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
-        cost = tf.reduce_mean(loss)
+    @abstractmethod
+    def train_construction(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def contextual_magnitude(self, val):
+        raise NotImplementedError
+
+    def _train_construction(self, cost=None):
+        assert cost is not None
 
         tf.summary.scalar('cost', cost)
         optimizer = tf.train.AdamOptimizer(self.lr)
@@ -72,20 +78,31 @@ class Autoencoder(ABC):
         for index, grad in enumerate(grads):
             tf.summary.histogram("{}-grad".format(grads[index][1].name), grads[index])
 
+        ################################################
+        #Validation score, and custom im validation
+        ################################################
+
         validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns 2 vals
-        return cost, optimizer, validation_score
+        im_plot = (self.decoder - self.encoder_input)[0:1]
+        self.contextual_magnitude(im_plot)
+
+        return cost, optimizer, validation_score, im_plot
+
+
+
+
 
     def train(self, orderbook_data, validation_data):
         total_runs = 0
-        for i in tqdm(range(self.epochs)):
+        for i in trange(self.epochs, desc='Epochs'):
 
             ################################################
             # Train the model
             ################################################
             batch_length = len(orderbook_data)
             randomized = np.random.choice(batch_length, batch_length, replace=False)
-            for j, mb in enumerate(range(batch_length // self.batch_size)):
+            for mb in trange(batch_length // self.batch_size, desc='Minibatch', leave=True):
                 total_runs += 1
                 minibatch = orderbook_data[randomized[mb * self.batch_size: (mb + 1) * self.batch_size], :]
                 summary, x = self.sess.run([self.summ, self.train_op],
@@ -95,5 +112,7 @@ class Autoencoder(ABC):
             ################################################
             # Validate on fixed number of points
             ################################################
-            score = self.sess.run(self.validation, feed_dict={self.encoder_input: validation_data})
-            print("Validation Error: Step {} Error: {}".format(i, score))
+            validation = validation_data[np.random.choice(len(validation_data), self.batch_size)]
+            score, _ = self.sess.run([self.validation, self.validation_image],
+                                     feed_dict={self.encoder_input: validation})
+            print("\nValidation Error: Step {} Error: {}\n".format(i, score))
