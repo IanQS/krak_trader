@@ -3,15 +3,14 @@ Autoencoder sanity check with keras
 
 Author: Ian Q
 """
-import keras
+
 from kraken_brain.trader_configs import ALL_DATA
 from kraken_brain.utils import get_image_from_np
 from kraken_brain.utils import custom_scale
 
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D, Flatten, Reshape
+from keras.layers import Input, Dense, Flatten, Reshape
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
-from keras import backend as K
 
 if __name__ == '__main__':
     BATCH_SIZE = 100

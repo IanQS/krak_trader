@@ -1,5 +1,5 @@
 """
-Base orderbook_embedding class. Implements most things generically, so the user should
+Base Autoencoder class. Implements most things generically, so the user should
 only need to override
 
 Author: Ian Q
@@ -31,7 +31,7 @@ class Autoencoder(ABC):
         ################################################
         # Construct Graph
         ################################################
-        with tf.variable_scope('orderbook_embedding'):
+        with tf.variable_scope('autoencoder'):
             self.encoder_input = None
             self.encoder = self._construct_encoder(self.shape)
             self.decoder = self._construct_decoder(self.encoder)

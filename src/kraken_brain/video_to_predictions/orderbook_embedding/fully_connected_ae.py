@@ -4,10 +4,10 @@ generated
 
 Author: Ian Q
 """
-from kraken_brain.network.autoencoder.autoencoder_base import Autoencoder
+from .autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries, ob_diff
+from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries
 
 
 class FullyConnectedAE(Autoencoder):

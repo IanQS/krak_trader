@@ -4,10 +4,10 @@ generated
 
 Author: Ian Q
 """
-from kraken_brain.network.autoencoder.autoencoder_base import Autoencoder
+from .autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA, CONV_INPUT_SHAPE
-from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries, ob_diff
+from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries
 
 
 class ConvolutionalAE(Autoencoder):
@@ -15,7 +15,6 @@ class ConvolutionalAE(Autoencoder):
         kwargs['name'] = self.__class__.__name__
         self.regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
         super().__init__(*args, **kwargs)
-
 
     def _construct_encoder(self, input_shape: tuple):
         self.encoder_input = tf.placeholder(tf.float32, input_shape, name='x')
@@ -63,6 +62,7 @@ class ConvolutionalAE(Autoencoder):
         variable_summaries(asks_v, 'ask_vol')
         variable_summaries(bids_p, 'bid_price')
         variable_summaries(bids_v, 'bid_vol')
+
 
 if __name__ == '__main__':
     tf.reset_default_graph()
