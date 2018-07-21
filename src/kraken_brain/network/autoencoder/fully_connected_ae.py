@@ -64,9 +64,8 @@ if __name__ == '__main__':
     # Data processing steps
     ################################################
     data = get_image_from_np(ALL_DATA, CURRENCY)
-    data = ob_diff(data, final_shape=(-1, 100, 2 * 2))
     # Scale the data axis-wise
-    #data = custom_scale(data, (-1, 100, 2 * 2))
+    data = custom_scale(data, (-1, 100, 2 * 2))
     data, validation_data = split_data(data, BATCH_SIZE * 100, maintain_temporal=False)
     # train, then validate
     model.train(data, validation_data)

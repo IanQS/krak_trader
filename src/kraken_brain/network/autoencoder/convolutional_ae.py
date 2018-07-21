@@ -51,7 +51,7 @@ class ConvolutionalAE(Autoencoder):
         reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss = tf.add_n([base_loss] + reg_losses, name="loss")
 
-        cost = tf.reduce_mean(base_loss)
+        cost = tf.reduce_mean(loss)
         return super()._train_construction(cost)
 
     def contextual_magnitude(self, val):
@@ -78,8 +78,7 @@ if __name__ == '__main__':
     ################################################
     data = get_image_from_np(ALL_DATA, CURRENCY)
     # Scale the data axis-wise
-    data = ob_diff(data, final_shape=(-1, *CONV_INPUT_SHAPE))
-    #data = custom_scale(data, (-1, *CONV_INPUT_SHAPE))
+    data = custom_scale(data, (-1, *CONV_INPUT_SHAPE))
     data, validation_data = split_data(data, BATCH_SIZE * 100, maintain_temporal=False)
     # train, then validate
     model.train(data, validation_data)

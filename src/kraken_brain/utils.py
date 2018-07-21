@@ -7,7 +7,6 @@ Notes:
 
 """
 
-
 import numpy as np
 import os
 from sklearn.preprocessing import minmax_scale, robust_scale, normalize
