@@ -7,12 +7,12 @@ Author: Ian Q
 from kraken_brain.network.autoencoder.autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.utils import get_image_from_np, custom_scale, split_data
+from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries, ob_diff
 
 
 class FullyConnectedAE(Autoencoder):
     def __init__(self, *args, **kwargs):
-        kwargs['name'] = self.__class__.__name__
+        kwargs['name'] = self.__class__.__name__ + '_diff'
         super().__init__(*args, **kwargs)
 
     def _construct_encoder(self, input_shape: tuple):
@@ -35,6 +35,21 @@ class FullyConnectedAE(Autoencoder):
             decoded = tf.reshape(d_fc_2, self.shape)
             return decoded
 
+    @property
+    def train_construction(self):
+        loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
+        cost = tf.reduce_mean(loss)
+        return super()._train_construction(cost)
+
+    def contextual_magnitude(self, val):
+        asks_p = val[:, :, 0:1]
+        asks_v = val[:, :, 1:2]
+        bids_p = val[:, :, 3:4]
+        bids_v = val[:, :, 4:5]
+        variable_summaries(asks_p, 'ask_price')
+        variable_summaries(asks_v, 'ask_vol')
+        variable_summaries(bids_p, 'bid_price')
+        variable_summaries(bids_v, 'bid_vol')
 
 if __name__ == '__main__':
     tf.reset_default_graph()
@@ -42,15 +57,16 @@ if __name__ == '__main__':
     graph = tf.Graph()
     BATCH_SIZE = 256
     CURRENCY = 'XXRPZUSD'
-    EPOCHS = 50
+    EPOCHS = 15
     model = FullyConnectedAE(sess, graph, (100, 4), BATCH_SIZE, debug=True, epochs=EPOCHS)
 
     ################################################
     # Data processing steps
     ################################################
     data = get_image_from_np(ALL_DATA, CURRENCY)
+    data = ob_diff(data, final_shape=(-1, 100, 2 * 2))
     # Scale the data axis-wise
-    data = custom_scale(data, (data[0].shape[0], 100, 2 * 2))
+    #data = custom_scale(data, (-1, 100, 2 * 2))
     data, validation_data = split_data(data, BATCH_SIZE * 100, maintain_temporal=False)
     # train, then validate
     model.train(data, validation_data)

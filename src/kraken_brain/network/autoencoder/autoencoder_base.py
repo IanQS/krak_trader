@@ -35,7 +35,7 @@ class Autoencoder(ABC):
             self.encoder_input = None
             self.encoder = self._construct_encoder(self.shape)
             self.decoder = self._construct_decoder(self.encoder)
-            self.cost, self.train_op, self.validation, self.validation_image = self._train_construction
+            self.cost, self.train_op, self.validation, self.validation_image = self.train_construction
 
         ################################################
         # Construct loggers
@@ -57,11 +57,16 @@ class Autoencoder(ABC):
     def _construct_decoder(self, encoded):
         raise NotImplementedError
 
+    @abstractmethod
+    def train_construction(self):
+        raise NotImplementedError
 
-    @property
-    def _train_construction(self):
-        loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
-        cost = tf.reduce_mean(loss)
+    @abstractmethod
+    def contextual_magnitude(self, val):
+        raise NotImplementedError
+
+    def _train_construction(self, cost=None):
+        assert cost is not None
 
         tf.summary.scalar('cost', cost)
         optimizer = tf.train.AdamOptimizer(self.lr)
@@ -73,16 +78,20 @@ class Autoencoder(ABC):
         for index, grad in enumerate(grads):
             tf.summary.histogram("{}-grad".format(grads[index][1].name), grads[index])
 
+        ################################################
+        #Validation score, and custom im validation
+        ################################################
+
         validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns 2 vals
-
-
         im_plot = (self.decoder - self.encoder_input)[0:1]
-        asks = im_plot[:, :, :, 0:1]
-        bids = im_plot[:, :, :, 1:2]
-        tf.summary.image('asks', asks)
-        tf.summary.image('bids', bids)
+        self.contextual_magnitude(im_plot)
+
         return cost, optimizer, validation_score, im_plot
+
+
+
+
 
     def train(self, orderbook_data, validation_data):
         total_runs = 0

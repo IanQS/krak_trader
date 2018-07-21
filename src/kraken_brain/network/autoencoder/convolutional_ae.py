@@ -7,12 +7,12 @@ Author: Ian Q
 from kraken_brain.network.autoencoder.autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA, CONV_INPUT_SHAPE
-from kraken_brain.utils import get_image_from_np, custom_scale, split_data
+from kraken_brain.utils import get_image_from_np, custom_scale, split_data, variable_summaries, ob_diff
 
 
 class ConvolutionalAE(Autoencoder):
     def __init__(self, *args, **kwargs):
-        kwargs['name'] = self.__class__.__name__
+        kwargs['name'] = self.__class__.__name__ + '_diff'
         self.regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
         super().__init__(*args, **kwargs)
 
@@ -46,33 +46,23 @@ class ConvolutionalAE(Autoencoder):
             return conv5
 
     @property
-    def _train_construction(self):
+    def train_construction(self):
         base_loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss = tf.add_n([base_loss] + reg_losses, name="loss")
 
-        cost = tf.reduce_mean(loss)
+        cost = tf.reduce_mean(base_loss)
+        return super()._train_construction(cost)
 
-        tf.summary.scalar('cost', cost)
-        optimizer = tf.train.AdamOptimizer(self.lr)
-
-        grads = optimizer.compute_gradients(cost)
-        # Update the weights wrt to the gradient
-        optimizer = optimizer.apply_gradients(grads)
-        # Save the grads with tf.summary.histogram
-        for index, grad in enumerate(grads):
-            tf.summary.histogram("{}-grad".format(grads[index][1].name), grads[index])
-
-        validation_score = tf.metrics.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
-        tf.summary.scalar("Validation Error", validation_score[0])  # as tf.metrics.mse returns tuple
-
-        im_plot = (self.decoder - self.encoder_input)[0:1]
-        asks = im_plot[:, :, :, 0:1]
-        bids = im_plot[:, :, :, 1:2]
-        tf.summary.image('asks', asks)
-        tf.summary.image('bids', bids)
-        return cost, optimizer, validation_score, im_plot
-
+    def contextual_magnitude(self, val):
+        asks_p = val[:, :, 0:1, 0:1]
+        asks_v = val[:, :, 1:2, 0:1]
+        bids_p = val[:, :, 0:1, 1:2]
+        bids_v = val[:, :, 1:2, 1:2]
+        variable_summaries(asks_p, 'ask_price')
+        variable_summaries(asks_v, 'ask_vol')
+        variable_summaries(bids_p, 'bid_price')
+        variable_summaries(bids_v, 'bid_vol')
 
 if __name__ == '__main__':
     tf.reset_default_graph()
@@ -80,7 +70,7 @@ if __name__ == '__main__':
     graph = tf.Graph()
     BATCH_SIZE = 256
     CURRENCY = 'XXRPZUSD'
-    EPOCHS = 50
+    EPOCHS = 15
     model = ConvolutionalAE(sess, graph, CONV_INPUT_SHAPE, BATCH_SIZE, debug=True, epochs=EPOCHS)
 
     ################################################
@@ -88,7 +78,8 @@ if __name__ == '__main__':
     ################################################
     data = get_image_from_np(ALL_DATA, CURRENCY)
     # Scale the data axis-wise
-    data = custom_scale(data, (data[0].shape[0], *CONV_INPUT_SHAPE))
+    data = ob_diff(data, final_shape=(-1, *CONV_INPUT_SHAPE))
+    #data = custom_scale(data, (-1, *CONV_INPUT_SHAPE))
     data, validation_data = split_data(data, BATCH_SIZE * 100, maintain_temporal=False)
     # train, then validate
     model.train(data, validation_data)
