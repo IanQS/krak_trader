@@ -1,3 +1,14 @@
+"""
+news_sentiment/utils.py - Util functions for sentiment analysis
+
+
+Author: Ian Q.
+
+Notes:
+    
+"""
+
+
 import os
 
 

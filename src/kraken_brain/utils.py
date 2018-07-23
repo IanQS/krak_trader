@@ -1,5 +1,5 @@
 """
-kraken_brain/Utils.py - Utils agnostic to models
+kraken_brain/Utils.py - Utils agnostic to models or tasks
 
 Author: Ian Q.
 
