@@ -8,7 +8,7 @@ persistent_tmp/
 
 # api
 
-api_key.py
+src/api_key.py
 serving_wrapper.ipynb
 
 # Byte-compiled / optimized / DLL files
