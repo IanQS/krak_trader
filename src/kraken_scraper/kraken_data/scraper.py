@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 import krakenex
-from kraken_scraper.kraken_exchange.scraper_constants import STORAGE_SIZE, PAIRS_TO_STORE, FAULTS
+from kraken_scraper.kraken_data.scraper_constants import STORAGE_SIZE, PAIRS_TO_STORE, FAULTS
 from constants import KRAKEN_PATH
 from tqdm import tqdm
 
