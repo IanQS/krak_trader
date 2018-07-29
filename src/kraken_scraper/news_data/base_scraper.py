@@ -30,7 +30,6 @@ class GenericScraper(ABC):
         self.url = website
         self.storage_site = site_dir
         self.seen_sites = seen_urls if seen_urls else {}
-
         self.parser = regexp.compile('\d{2}\-[a-zA-Z]*\-\d{4}')
 
     def parse_url(self, url):
@@ -49,7 +48,6 @@ class GenericScraper(ABC):
 
         f_name = os.path.join(self.storage_site, url)
         np.savez(f_name, article)
-
 
     @abstractmethod
     def _save_article(self):
