@@ -9,6 +9,7 @@ persistent_tmp/
 # api
 
 src/api_key.py
+src/news_api_key.py
 serving_wrapper.ipynb
 
 # Byte-compiled / optimized / DLL files
