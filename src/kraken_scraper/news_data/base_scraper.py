@@ -27,7 +27,7 @@ class GenericScraper(ABC):
         :param seen_urls: empty dict (new scraper), OR set data loaded in
         """
         self.storage_absolute = NEWS_PATH.format(site_dir)
-        self.seen_sites, self.seen_sites_store = self._storage_site_setup()
+        self.seen_sites, self._seen_sites_store = self._storage_site_setup()
         self.parser = regexp.compile('\d{2}\-[a-zA-Z]*\-\d{4}')
 
     def _storage_site_setup(self):
@@ -35,9 +35,9 @@ class GenericScraper(ABC):
         the 'seen sites' file from which we store URLs
         """
         seen_file = '/seen_data.txt'
-        seen_sites_store = storage_absolute + seen_file
-        if not os.path.isdir(storage_absolute):
-            os.mkdir(storage_absolute)
+        seen_sites_store = self.storage_absolute + seen_file
+        if not os.path.isdir(self.storage_absolute):
+            os.mkdir(self.storage_absolute)
 
             # Create the storage file too
             with open(seen_sites_store, 'a') as f:
@@ -47,16 +47,17 @@ class GenericScraper(ABC):
             data = [datum.strip() for datum in data]
             return set(data), seen_sites_store
 
-    def save_article(self, article, url):
-        with open(self.seen_sites_store, 'a') as f:
+    def save_article(self, article, url:str, date:str, site:str, author: str = None):
+        with open(self._seen_sites_store, 'a') as f:
             f.write(url)
 
         if not self.parser.match(date):
             raise ValueError('Date not formatted correctly')
 
         f_name = os.path.join(self.storage_absolute, url)
-        np.savez(f_name, article)
-
-    @abstractmethod
-    def _save_article(self):
-        raise NotImplementedError
+        data = {"article": article,
+                "url": url,
+                "date": date,
+                "site": site,
+                "author": author}
+        np.savez(f_name, **data)
