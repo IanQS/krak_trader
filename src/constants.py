@@ -1,4 +1,4 @@
-__STORAGE_PATH = '/media/itq/kraken_data/{}'
+__STORAGE_PATH = '/home/bryantpq/news_data/{}'
 
-KRAKEN_PATH = __STORAGE_PATH.format("kraken") + "/{}"
-NEWS_PATH = __STORAGE_PATH.format("news") + "/{}"
+KRAKEN_PATH = __STORAGE_PATH.format("kraken") + "{}"
+NEWS_PATH = __STORAGE_PATH.format("news") + "{}"

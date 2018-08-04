@@ -28,7 +28,7 @@ class GenericScraper(ABC):
         """
         self.storage_absolute = NEWS_PATH.format(site_dir)
         self.seen_sites, self._seen_sites_store = self._storage_site_setup()
-        self.parser = regexp.compile('\d{2}\-[a-zA-Z]*\-\d{4}')
+        self.parser = regexp.compile('(\d{2}\-[a-zA-Z]*\-\d{4}|\d{4}\-\d{2}\-\d{2})')
 
     def _storage_site_setup(self):
         """ Construct the storage site (if not exists), and initiate

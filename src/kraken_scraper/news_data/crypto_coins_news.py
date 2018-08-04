@@ -10,8 +10,8 @@ import sys
 
 from .base_scraper import GenericScraper
 from .site_configs import SITE_CONF
+from .news_api_key import key
 
-from news_api_key import key
 from newsapi import NewsApiClient
 from newsapi.newsapi_exception import NewsAPIException
 
@@ -54,7 +54,7 @@ class CryptoCoinNews(GenericScraper):
         :return:
             None
         """
-        for query in query_results:
+        for query in query_results["articles"]:
             query = self.__substitution(query)
             processed_data = self._process(query)
             self.save_article(**processed_data)
