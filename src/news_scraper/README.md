@@ -9,3 +9,6 @@ TODO:
  - Evaluate predictions made in previous articles (did prices actually rise/fall)
    - use these to rate article authors by dependability
  - build corpora of article rawtexts, and author scores
+
+Helpful/educational links
+ - [Learn to day-trade in a week](https://www.youtube.com/watch?v=GTtKLeDTCHo)
