@@ -9,21 +9,37 @@ Notes:
 import sys
 
 from .base_scraper import GenericScraper
+from .site_configs import SITE_CONF
+
 from news_api_key import key
 from newsapi import NewsApiClient
 from newsapi.newsapi_exception import NewsAPIException
 
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+ 
 class CryptoCoinNews(GenericScraper):
     def __init__(self, source):
         self.api = NewsApiClient(api_key=key)
         self.source = source
+        self.config = SITE_CONF[source]
         super().__init__('/{}'.format(self.source))
         self.get_articles()
 
     def _process(self, query) -> dict:
-        ################################################
-        #TODO: Bryan: overwrite query[article] with the extracted article from the link query['url']
-        ################################################
+        if self.config['selenium']:
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+
+            driver = webdriver.Chrome(chrome_options=chrome_options)
+            driver.get(query['url'])
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+        else:
+            soup = BeautifulSoup(requests.get(query['url']).text, "html.parser")
+
+        query["article"] = soup.find(self.config["html_tag"], self.config["tag_attributes"])
 
         holder = {}
         for access_key in ['article', 'url', 'date', 'site', 'author']:
