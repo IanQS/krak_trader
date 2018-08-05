@@ -1,5 +1,7 @@
 """
-crypto_coins_news - scraper for aforementioned news site.
+news_api_scraper - scraper for aforementioned news site.
+
+__main__ -> runs the scraper on a single site instance as a test.
 
 Author: Ian Q.
 
@@ -11,6 +13,7 @@ import sys
 from .base_scraper import GenericScraper
 from .site_configs import SITE_CONF
 from .news_api_key import key
+from time import sleep as thread_swap # sleep to allow other threads to run
 
 from newsapi import NewsApiClient
 from newsapi.newsapi_exception import NewsAPIException
@@ -19,14 +22,38 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
- 
-class CryptoCoinNews(GenericScraper):
+
+class NewsAPIScraper(GenericScraper):
     def __init__(self, source):
         self.api = NewsApiClient(api_key=key)
         self.source = source
-        self.config = SITE_CONF[source]
+        assert source in SITE_CONF.keys()  # Only scrape on websites we've configured
         super().__init__('/{}'.format(self.source))
         self.get_articles()
+
+    @classmethod
+    def spawn(cls, src_name):
+        """ Class factory that spawns our instances
+
+        src_name: valid news source name compatible with news_api
+        """
+        return cls(src_name)
+
+    def get_articles(self):
+        """ Infinite while-loop that queries the website for any
+        articles it has not seen
+
+        :return:
+        """
+        ind = 1  # NewsAPIClient starts indexing at 1
+        page_size = 100
+        while True:
+            queries, ind = self.safe_query(ind, page_size=page_size)
+            if queries is None:
+                page_size=10  # We've hit an error, or reached end of all articles
+            thread_swap(1)
+            self.process(queries)
+
 
     def _process(self, query) -> dict:
         if self.config['selenium']:
@@ -61,8 +88,9 @@ class CryptoCoinNews(GenericScraper):
             query = self.__substitution(query)
             processed_data = self._process(query)
             self.save_article(**processed_data)
+            thread_swap(0.1)
 
-    def __substitution(self, query):
+    def __substitution(self, query: dict):
         """ Fixes query to have the fields expected by our saver
 
         :param query:
@@ -71,21 +99,6 @@ class CryptoCoinNews(GenericScraper):
         query['site'] = query['source']['name']
         query['date'] = query['publishedAt']
         return query
-
-
-    def get_articles(self):
-        """ Infinite while-loop that queries the website for any
-        articles it has not seen
-
-        :return:
-        """
-        ind = 1  # NewsAPIClient starts indexing at 1
-        page_size = 100
-        while True:
-            queries, ind = self.safe_query(ind, page_size=page_size)
-            if queries is None:
-                page_size=10
-            self.process(queries)
 
     def safe_query(self, ind, page_size=100):
         error_message = 'Error retrieving from {}. Error: {}'
@@ -105,11 +118,11 @@ class CryptoCoinNews(GenericScraper):
             if e['code'] == 'maximumResultsReached':
                 return None, None
         except Exception as e:
-            print(error_message.format(self.__class__.__name__, e))
+            print(error_message.format(self.name, e))
             sys.exit(0)
         if q['status'] != 'ok':
-            print(error_message.format(self.__class__.__name__, 'Status: {}'.format(q['status'])))
+            print(error_message.format(self.name, 'Status: {}'.format(q['status'])))
         return q, ind + 1
 
 if __name__ == '__main__':
-    scraper = CryptoCoinNews('crypto-coins-news')
+    scraper = NewsAPIScraper('crypto-coins-news')  # Test name

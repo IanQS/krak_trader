@@ -27,6 +27,7 @@ class GenericScraper(ABC):
         :param seen_urls: empty dict (new scraper), OR set data loaded in
         """
         self.storage_absolute = NEWS_PATH.format(site_dir)
+        self.name = site_dir
         self.seen_sites, self._seen_sites_store = self._storage_site_setup()
         self.parser = regexp.compile('(\d{2}\-[a-zA-Z]*\-\d{4}|\d{4}\-\d{2}\-\d{2})')
 
