@@ -6,16 +6,26 @@ Goal - write a proof-of-concept script that:
 - Trains a targeted language model (either from a pre-trained English model, or from a blank one)
   - Test this to see what performs better!
 - Builds mappings between crypto-currency ticker symbols and possible aliases
+  - Examine the entities auto-classified by spacy as MONEY, and possibly augment ticker_aliases
 
 author: wrhm
+
+TODO:
+ - make sure MONEY annotations include currency values (verify that MONEY applies to "25 USD", and not just to "USD")
 
 Links:
 - https://spacy.io/usage/training , esp the section "How do I get training data?"
 - https://spacy.io/usage/linguistic-features#entity-types
 - Test article: https://www.forbes.com/sites/chuckjones/2018/08/04/bitcoin-falls-under-7000/#769c8c227477
+- Borrows heavily from https://github.com/explosion/spaCy/blob/master/examples/training/train_ner.py
 '''
 
-# import spacy
+import random
+import spacy
+
+# spacy.nlp()
+print(dir(spacy))
+exit()
 
 # refactor this line to load mappings from a file
 ticker_aliases = {'Bitcoin' : 'BTC', 'bitcoin' : 'BTC', 'BTC' : 'BTC'}
@@ -40,7 +50,10 @@ def augment_annotations():
             ind_start = sen.index(alias)
             ind_end = ind_start + len(alias)
             alias_annotation = (ind_start, ind_end, "MONEY")
-            train_data[i][1].append(alias_annotation)
+            if alias_annotation not in train_data[i][1]:
+                train_data[i][1].append(alias_annotation)
+
+
 
 if __name__ == '__main__':
     # for comparison's sake, print the training data without the newly-created cryptocurrency annotations
