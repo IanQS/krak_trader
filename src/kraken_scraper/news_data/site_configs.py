@@ -1,14 +1,16 @@
 SITE_CONF = {
-    "crypto_coins_news": {
-        "selenium": False,
+    "crypto-coins-news": {
+        "selenium": True,
+        "api": True,
         "html_tag": "div",
         "tag_attributes": {
             "class": "entry-content"
         }
     },
 
-    "coin_telegraph": {
+    "coin-telegraph": {
         "selenium": True,
+        "api": False,
         "html_tag": "div",
         "tag_attributes": {
             "class" :"post-content"
@@ -17,6 +19,7 @@ SITE_CONF = {
 
     "techcrunch": {
         "selenium": True,
+        "api": False,
         "html_tag": "div",
         "tag_attributes": {
             "class": "article-content"

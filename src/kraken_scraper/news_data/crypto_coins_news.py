@@ -39,7 +39,10 @@ class CryptoCoinNews(GenericScraper):
         else:
             soup = BeautifulSoup(requests.get(query['url']).text, "html.parser")
 
-        query["article"] = soup.find(self.config["html_tag"], self.config["tag_attributes"])
+        query["article"] = str(soup.find(self.config["html_tag"], self.config["tag_attributes"]))
+        if query["article"] == "None": # query['article'] is None when content not found, log this error
+            # TODO: log this error somewhere
+            print("Error: Article not found for {}".format(query['url']))
 
         holder = {}
         for access_key in ['article', 'url', 'date', 'site', 'author']:
@@ -109,4 +112,4 @@ class CryptoCoinNews(GenericScraper):
         return q, ind + 1
 
 if __name__ == '__main__':
-    scraper = CryptoCoinNews('crypto_coins_news')
+    scraper = CryptoCoinNews('crypto-coins-news')

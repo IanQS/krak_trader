@@ -48,16 +48,17 @@ class GenericScraper(ABC):
             return set(data), seen_sites_store
 
     def save_article(self, article, url:str, date:str, site:str, author: str = None):
+        f_name = url.replace("/", "=")
         with open(self._seen_sites_store, 'a') as f:
-            f.write(url)
+            f.write(f_name)
 
         if not self.parser.match(date):
             raise ValueError('Date not formatted correctly')
 
-        f_name = os.path.join(self.storage_absolute, url)
+        f_path = os.path.join(self.storage_absolute, f_name)
         data = {"article": article,
                 "url": url,
                 "date": date,
                 "site": site,
                 "author": author}
-        np.savez(f_name, **data)
+        np.savez(f_path, **data)
