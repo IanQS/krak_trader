@@ -1,5 +1,6 @@
 """
 base_scraper
+  - all scrapers should inherit from this and utilize the provided functions
 
 Useful links:
     - https://realpython.com/python-web-scraping-practical-introduction/

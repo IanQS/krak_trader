@@ -6,7 +6,6 @@ may create
 Author: IanQS
 """
 
-import time
 from news_api_key import key
 from newsapi import NewsApiClient
 from news_api_scraper import NewsAPIScraper
@@ -15,8 +14,6 @@ from news_api_scraper import NewsAPIScraper
 from .registered import _registered
 from .site_configs import SITE_CONF
 import threading
-
-MAX_THREADS = 5
 
 if __name__ == '__main__':
     # First get all configured newsapi sites
