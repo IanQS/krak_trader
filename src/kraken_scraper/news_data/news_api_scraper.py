@@ -54,19 +54,19 @@ class NewsAPIScraper(GenericScraper):
             thread_swap(1)
             self.process(queries)
 
-
-    def _process(self, query) -> dict:
-        if self.config['selenium']:
-            chrome_options = Options()
-            chrome_options.add_argument("--headless")
-
-            driver = webdriver.Chrome(chrome_options=chrome_options)
-            driver.get(query['url'])
-            soup = BeautifulSoup(driver.page_source, "html.parser")
+    def _fetch_website(self, query, sel_driver):
+        if SITE_CONF[query['source']['id']]['selenium']:
+            sel_driver.get(query['url'])
+            soup = BeautifulSoup(sel_driver.page_source, "html.parser")
         else:
             soup = BeautifulSoup(requests.get(query['url']).text, "html.parser")
 
-        query["article"] = str(soup.find(self.config["html_tag"], self.config["tag_attributes"]))
+        return soup
+
+    def _process(self, query, soup) -> dict:
+        config = SITE_CONF[query['source']['id']]
+        query["article"] = str(soup.find(config["html_tag"], config["tag_attributes"]))
+
         if query["article"] == "None": # query['article'] is None when content not found, log this error
             # TODO: log this error somewhere
             print("Error: Article not found for {}".format(query['url']))
@@ -84,9 +84,14 @@ class NewsAPIScraper(GenericScraper):
         :return:
             None
         """
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        sel_driver = webdriver.Chrome(chrome_options=chrome_options)
+
         for query in query_results["articles"]:
             query = self.__substitution(query)
-            processed_data = self._process(query)
+            soup = self._fetch_website(query, sel_driver)
+            processed_data = self._process(query, soup)
             self.save_article(**processed_data)
             thread_swap(0.1)
 

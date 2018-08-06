@@ -1,6 +1,7 @@
 absl-py==0.2.2
 astor==0.6.2
 backcall==0.1.0
+bs4==0.0.1
 bleach==1.5.0
 certifi==2018.4.16
 chardet==3.0.4
@@ -72,6 +73,7 @@ requests==2.19.1
 scikit-learn==0.19.1
 scipy==1.1.0
 scs==2.0.2
+selenium==3.14.0
 Send2Trash==1.5.0
 simplegeneric==0.8.1
 six==1.11.0

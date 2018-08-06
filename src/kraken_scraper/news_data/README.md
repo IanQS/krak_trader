@@ -22,7 +22,3 @@
     - how to interact with the [base class](base_scraper.py)
     
     - how to interact with the NewsApiClient  
-
-3. [ChromeDriver](https://github.com/SeleniumHQ/selenium/wiki/ChromeDriver) for Selenium
-    - Selenium scraping requires installation of GoogleChrome in addition to ChromeDriver, whose executable should be made visible in your PATH.
-    - Chrome is used as it supports headless browsing, i.e. an instance of Chrome does not need to be opened every time a webpage is queried.
