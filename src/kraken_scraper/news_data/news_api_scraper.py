@@ -10,9 +10,9 @@ Notes:
 """
 import sys
 
-from .base_scraper import GenericScraper
-from .site_configs import SITE_CONF
-from .news_api_key import key
+from kraken_scraper.news_data.base_scraper import GenericScraper
+from kraken_scraper.news_data.site_configs import SITE_CONF
+from news_api_key import key
 from time import sleep as thread_swap # sleep to allow other threads to run
 
 from newsapi import NewsApiClient
@@ -29,7 +29,30 @@ class NewsAPIScraper(GenericScraper):
         self.source = source
         assert source in SITE_CONF.keys()  # Only scrape on websites we've configured
         super().__init__('/{}'.format(self.source))
+        self.driver = self.__setup_driver()
         self.get_articles()
+
+
+    def __setup_driver(self):
+        if SITE_CONF[self.source]['selenium']:
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            sel_driver = webdriver.Chrome(chrome_options=chrome_options)
+            err_m = 'Selenium returned None for {} on {}'
+            def wrapped_check(url):
+                data = sel_driver.get(url)
+                if data is None:
+                    raise Exception(err_m.format(url, self.source))
+                return data.page_source
+            return wrapped_check
+        else:
+            err_m = 'Requests Lib returned None for {} on {}'
+            def wrapped_check(url):
+                data = requests.get(url)
+                if data is None:
+                    raise Exception(err_m.format(url, self.source))
+                return data.text
+            return wrapped_check
 
     @classmethod
     def spawn(cls, src_name):
@@ -53,15 +76,13 @@ class NewsAPIScraper(GenericScraper):
                 page_size=10  # We've hit an error, or reached end of all articles
             thread_swap(1)
             self.process(queries)
+            thread_swap(1)
 
-    def _fetch_website(self, query, sel_driver):
-        if SITE_CONF[query['source']['id']]['selenium']:
-            sel_driver.get(query['url'])
-            soup = BeautifulSoup(sel_driver.page_source, "html.parser")
-        else:
-            soup = BeautifulSoup(requests.get(query['url']).text, "html.parser")
+    def _fetch_website(self, query):
+        print(query['url'])
+        data = self.driver(query['url'])
 
-        return soup
+        return BeautifulSoup(data, 'html.parser')
 
     def _process(self, query, soup) -> dict:
         config = SITE_CONF[query['source']['id']]
@@ -84,13 +105,9 @@ class NewsAPIScraper(GenericScraper):
         :return:
             None
         """
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        sel_driver = webdriver.Chrome(chrome_options=chrome_options)
-
         for query in query_results["articles"]:
             query = self.__substitution(query)
-            soup = self._fetch_website(query, sel_driver)
+            soup = self._fetch_website(query)
             processed_data = self._process(query, soup)
             self.save_article(**processed_data)
             thread_swap(0.1)

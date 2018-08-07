@@ -8,11 +8,9 @@ Author: IanQS
 
 from news_api_key import key
 from newsapi import NewsApiClient
-from news_api_scraper import NewsAPIScraper
+from kraken_scraper.news_data.news_api_scraper import NewsAPIScraper
+from kraken_scraper.news_data.site_configs import SITE_CONF
 
-
-from .registered import _registered
-from .site_configs import SITE_CONF
 import threading
 
 if __name__ == '__main__':
