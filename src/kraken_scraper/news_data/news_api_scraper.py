@@ -40,10 +40,10 @@ class NewsAPIScraper(GenericScraper):
             sel_driver = webdriver.Chrome(chrome_options=chrome_options)
             err_m = 'Selenium returned None for {} on {}'
             def wrapped_check(url):
-                data = sel_driver.get(url)
-                if data is None:
+                sel_driver.get(url)
+                if sel_driver.page_source is None:
                     raise Exception(err_m.format(url, self.source))
-                return data.page_source
+                return sel_driver.page_source
             return wrapped_check
         else:
             err_m = 'Requests Lib returned None for {} on {}'
