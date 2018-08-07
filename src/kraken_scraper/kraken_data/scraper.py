@@ -1,3 +1,14 @@
+"""
+scraper.py -> Runs kraken scraper to get data off Kraken's website
+
+
+Author: Ian Q.
+
+Notes:
+    
+"""
+
+
 import sys
 import time
 import numpy as np

@@ -3,7 +3,10 @@ news_api_scraper - scraper for aforementioned news site.
 
 __main__ -> runs the scraper on a single site instance as a test.
 
-Author: Ian Q.
+Author: Ian Q. and Bryan Q.
+
+Edits:
+    Bryan Q: added Selenium Scraper
 
 Notes:
 
