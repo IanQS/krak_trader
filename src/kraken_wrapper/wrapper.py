@@ -114,6 +114,23 @@ class Interface(object):
         return accum
 
     @property
+    def __all_deposits(self, asset: str ='USD') -> float:
+        """ Returns all successful FIAT deposits (after fees applied)
+
+        :param asset:
+        :return:
+        """
+        total_deposited = 0
+        for method in self._exchange.query_private('DepositMethods')['result']:
+            method_ = method['method']
+            deposits = self._exchange.query_private('DepositStatus', {'method': method_, 'asset': asset})
+            for deposit in deposits['result']:
+                if deposit['status'] == "Success":
+                    total_deposited += (float(deposit['amount']) - float(deposit['fee']))
+        return total_deposited
+
+
+    @property
     def breakdown(self):
         """
 
@@ -145,7 +162,17 @@ class Interface(object):
 
     @property
     def value(self):
-        return float(self._exchange.query_private('TradeBalance')['result']['eb'])
+        """ Describes current value, total profit if we liquidate now, and pct-gain
+
+        :return:
+        """
+        total_deposits = self.__all_deposits
+        value = float(self._exchange.query_private('TradeBalance')['result']['eb'])
+
+        profit = value - total_deposits
+        pct_gain = profit / total_deposits
+
+        return {'Deposits': total_deposits, 'value': value, 'profit': profit, '%-gain': pct_gain}
 
     @property
     def unallocated(self):
