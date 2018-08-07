@@ -50,8 +50,9 @@ class GenericScraper(ABC):
             return set(data), seen_sites_store
 
     def save_article(self, article, url:str, date:str, site:str, author: str = None):
-        f_name = url.replace("/", "=")
+        f_name = url.replace("/", "===")
         with open(self._seen_sites_store, 'a') as f:
+            f.write('\n')
             f.write(f_name)
 
         if not self.parser.match(date):

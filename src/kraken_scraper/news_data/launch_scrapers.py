@@ -17,7 +17,8 @@ if __name__ == '__main__':
     # First get all configured newsapi sites
     valid_names = set()
     for src_name in SITE_CONF.keys():
-        valid_names.add(src_name)
+        if SITE_CONF[src_name]['api']:  # Only extract where we use newsAPI
+            valid_names.add(src_name)
 
     # Then, launch those sites
     all_threads = []
