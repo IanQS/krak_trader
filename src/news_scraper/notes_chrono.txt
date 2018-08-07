@@ -1,7 +1,0 @@
-# notes_chrono.txt
-# Journal of what I've read and/or worked on
-# Disclaimer: will not be completely detailed; is mostly for personal reference/organization
-
-2018-08-04
-- started exploring spacy
-- https://spacy.io/usage/linguistic-features#section-named-entities

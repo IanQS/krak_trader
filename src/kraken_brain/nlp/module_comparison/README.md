@@ -1,4 +1,7 @@
-news_scraper
+# module_comparison
+### Explore benefits/drawbacks of spaCy & CoreNLP for NER and related parsing tasks
+
+Currently leaning toward spaCy for bootstrapping targeted language models, but only CoreNLP has built-in sentiment analysis.
 
 ### TODO:
 - Research sites for crypto news articles/blurbs/predictions
