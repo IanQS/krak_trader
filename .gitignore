@@ -3,6 +3,7 @@
 .idea/
 summaries/
 
+
 persistent_tmp/
 .ipynb_checkpoints
 
@@ -12,6 +13,11 @@ src/api_key.py
 src/news_api_key.py
 src/constants.py
 serving_wrapper.ipynb
+
+api_key.py
+constants.py
+news_api_key.py
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
