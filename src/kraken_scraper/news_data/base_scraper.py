@@ -49,6 +49,8 @@ class GenericScraper(ABC):
             return set(data), seen_sites_store
 
     def save_article(self, article, url:str, date:str, site:str, author: str = None):
+        # '/' chars are mapped to '%2f' because most filesystems do not allow '/' chars in file names.
+        # '%2f' was chosen to be consistent with W3 URI specification.
         mapped_url = url.replace('/', '%2f')
         with open(self._seen_sites_store, 'a') as f:
             f.write(url)
