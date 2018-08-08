@@ -14,8 +14,8 @@ However, since many websites use JavaScript to push their content, we still requ
     >>> site.text
     ```
 4. Compare the HTML returned from your browser to the HTML returned from `requests`.
-5. a) If you are **ABLE** to locate the content of the article returned by `requests`, then all is good and you can bask in the speed up you have gained.
-   b) If you are **NOT ABLE** to locate the content of the article returned by `requests` *or* some other error occurs, then you're doomed to using Selenium to painfully scrape content from that site for all eternity.
+5. * If you are **ABLE** to locate the content of the article returned by `requests`, then all is good and you can bask in the speed up you have gained.
+   * If you are **NOT ABLE** to locate the content of the article returned by `requests` *or* some other error occurs, then you're doomed to using Selenium to painfully scrape content from that site for all eternity.
 6. Proceed to configure the settings for that site.
 
 # Data format in site\_configs
