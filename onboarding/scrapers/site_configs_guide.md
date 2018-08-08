@@ -7,20 +7,20 @@ However, since many websites use JavaScript to push their content, we still requ
 ### How to determine if a site requires Selenium
 1. Open your web browser and navigate to an article from the site.
 2. Inspect the source HTML.
-3. Make a query to the same URL using the `requests` lib.
+3. Fire up your Python interpreter and make a query to the same URL using the `requests` lib.
     ```
     >>> import requests
-    >>> site = requests.get('www.potatopro.com/news')
+    >>> site = requests.get(url)
     >>> site.text
     ```
 4. Compare the HTML returned from your browser to the HTML returned from `requests`.
 5. * If you are **ABLE** to locate the content of the article returned by `requests`, then all is good and you can bask in the speed up you have gained.
    * If you are **NOT ABLE** to locate the content of the article returned by `requests` *or* some other error occurs, then you're doomed to using Selenium to painfully scrape content from that site for all eternity.
-6. Proceed to configure the settings for that site.
+6. Proceed to configure the settings for that site in `site_configs.py`.
 
-# Data format in site\_configs
+# Data format in site\_configs.py
 The file `site_configs.py` is used to inject site specific settings into the scrapers.
-Data format explanation using "crypto-coins-news" as an example:
+We will use the settings for crypto-coins-news as an example for how to set up a site:
 ```
 "crypto-coins-news": {
     "selenium": True,
@@ -31,10 +31,10 @@ Data format explanation using "crypto-coins-news" as an example:
     }
 }
 ```
-| Field | Explanation 
+| Field | Desription 
 |---| ---
 |*crypto-coins-news* |Site id as stored in the NewsApi, check [here](https://newsapi.org/docs/endpoints/sources) for the list of ids. If the site is not part of NewsApi, then name it using all lowercase letters, with hyphens in between words.
 |*selenium*          | Set to True if the website requires selenium to be scraped, usually websites whose content are JavaScript driven.
 |*api*               | Set to True if the website is covered under the NewsApi.
-|*html\_tag*         | The html tag to be scraped for content. Most commonly used is "div". Don't worry about capturing garbage along with actual content, it can be filtered out later.
-|*tag\_attributes*  | The attributes for "html\_tag". HTML tags have attributes along with them to help with their identification, e.g. `<div class="content-here" id="most-important-content" > ... </div>`. If this is the tag you want, put its attributes as follows: `"tag_attributes" : { "class": "content-here", "id"   : "most-important-content"}`
+|*html\_tag*         | The html tag to be scraped for content. Most commonly used is `div`. Try to localize the content as much as possible, but don't worry about capturing garbage along with actual content, it can be filtered out later. 
+|*tag\_attributes*  | The attributes for *html\_tag*. HTML tags have attributes along with them to help with their identification, e.g. `<div class="content-here" id="most-important-content" > ... </div>`. If this is the tag you want, put its attributes as follows: `"tag_attributes" : { "class": "content-here", "id"   : "most-important-content"}`
