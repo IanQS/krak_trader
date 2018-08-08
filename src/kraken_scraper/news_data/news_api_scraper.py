@@ -27,15 +27,11 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 class NewsAPIScraper(GenericScraper):
-    def __init__(self, source, limited=True):
-        """
-        :param source: the site-id the scraper should query for
-        :param limited: True if the scraper should stop when it sees an article it has already processed
-        """
+    def __init__(self, source):
         self.api = NewsApiClient(api_key=key)
         self.source = source
         assert source in SITE_CONF.keys()  # Only scrape on websites we've configured
-        super().__init__('/{}'.format(self.source), limited)
+        super().__init__('/{}'.format(self.source))
         self.driver = self.__setup_driver()
         self.get_articles()
 
@@ -62,12 +58,12 @@ class NewsAPIScraper(GenericScraper):
             return wrapped_check
 
     @classmethod
-    def spawn(cls, src_name, limited):
+    def spawn(cls, src_name):
         """ Class factory that spawns our instances
 
         src_name: valid news source name compatible with news_api
         """
-        return cls(src_name, limited)
+        return cls(src_name)
 
     def get_articles(self):
         """ Infinite while-loop that queries the website for any
@@ -121,10 +117,6 @@ class NewsAPIScraper(GenericScraper):
                 thread_swap(0.1)
             else:
                 print("Skipping {}".format(query['url']))
-                if self.limited:
-                    print("Scraper is up-to-date with news from {}. Exiting".format(self.source))
-                    sys.exit(0)
-
 
     def __substitution(self, query: dict):
         """ Fixes query to have the fields expected by our saver
@@ -161,4 +153,4 @@ class NewsAPIScraper(GenericScraper):
         return q, ind + 1
 
 if __name__ == '__main__':
-    scraper = NewsAPIScraper('crypto-coins-news', False)  # Test name
+    scraper = NewsAPIScraper('crypto-coins-news')  # Test name

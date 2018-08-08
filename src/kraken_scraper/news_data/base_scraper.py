@@ -22,14 +22,12 @@ import numpy as np
 
 
 class GenericScraper(ABC):
-    def __init__(self, site_dir: str, limited):
+    def __init__(self, site_dir: str, ):
         """ Inherited init method
         :param site_dir: directory to save data to
-        :param limited: True if the scraper should stop when it sees an article it has already processed
         """
         self.storage_absolute = NEWS_PATH.format(site_dir)
         self.name = site_dir
-        self.limited = limited
         self.seen_sites, self._seen_sites_store = self._storage_site_setup()
         self.parser = regexp.compile('(\d{2}\-[a-zA-Z]*\-\d{4}|\d{4}\-\d{2}\-\d{2})')
 
