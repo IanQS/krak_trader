@@ -4,7 +4,7 @@
 Currently leaning toward spaCy for bootstrapping targeted language models, but only CoreNLP has built-in sentiment analysis.
 
 ### TODO:
-- Research sites for crypto news articles/blurbs/predictions
+- (DONE in **/src/kraken_trader/**)Research sites for crypto news articles/blurbs/predictions
     - Determine which of these have APIs, and which need scraping
 - Create a semantic regressor to rate an article on a [-1,1] continuum of good/bad news for a currency
     - Quantitative vs qualitative statements ("BTC fell by 1.3%"), ("this are looking good for coinCoin this quarter")
