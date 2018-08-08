@@ -14,6 +14,9 @@ from kraken_scraper.news_data.site_configs import SITE_CONF
 import threading
 
 if __name__ == '__main__':
+    # To determine if scrapers should stop upon seeing first duplicate url
+    limited = False
+
     # First get all configured newsapi sites
     valid_names = set()
     for src_name in SITE_CONF.keys():
@@ -24,7 +27,7 @@ if __name__ == '__main__':
     all_threads = []
     for src in valid_names:
         news_thread = threading.Thread(
-            target=NewsAPIScraper.spawn, args=(src,), daemon=True
+            target=NewsAPIScraper.spawn, args=(src, limited), daemon=True
         )
         all_threads.append(news_thread)
         news_thread.start()

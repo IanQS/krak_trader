@@ -22,13 +22,14 @@ import numpy as np
 
 
 class GenericScraper(ABC):
-    def __init__(self, site_dir: str, ):
+    def __init__(self, site_dir: str, limited):
         """ Inherited init method
         :param site_dir: directory to save data to
-        :param seen_urls: empty dict (new scraper), OR set data loaded in
+        :param limited: True if the scraper should stop when it sees an article it has already processed
         """
         self.storage_absolute = NEWS_PATH.format(site_dir)
         self.name = site_dir
+        self.limited = limited
         self.seen_sites, self._seen_sites_store = self._storage_site_setup()
         self.parser = regexp.compile('(\d{2}\-[a-zA-Z]*\-\d{4}|\d{4}\-\d{2}\-\d{2})')
 
@@ -50,15 +51,15 @@ class GenericScraper(ABC):
             return set(data), seen_sites_store
 
     def save_article(self, article, url:str, date:str, site:str, author: str = None):
-        f_name = url.replace("/", "===")
+        mapped_url = url.replace('/', '%2f')
         with open(self._seen_sites_store, 'a') as f:
+            f.write(url)
             f.write('\n')
-            f.write(f_name)
 
         if not self.parser.match(date):
             raise ValueError('Date not formatted correctly')
 
-        f_path = os.path.join(self.storage_absolute, f_name)
+        f_path = os.path.join(self.storage_absolute, mapped_url)
         data = {"article": article,
                 "url": url,
                 "date": date,
