@@ -89,10 +89,6 @@ class Autoencoder(ABC):
 
         return cost, optimizer, validation_score, im_plot
 
-
-
-
-
     def train(self, orderbook_data, validation_data):
         total_runs = 0
         for i in trange(self.epochs, desc='Epochs'):
