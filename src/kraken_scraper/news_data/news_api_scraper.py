@@ -27,9 +27,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 class NewsAPIScraper(GenericScraper):
-    def __init__(self, source):
+    def __init__(self, source, query_kws):
         self.api = NewsApiClient(api_key=key)
         self.source = source
+        self.query_kws = query_kws
         assert source in SITE_CONF.keys()  # Only scrape on websites we've configured
         super().__init__('/{}'.format(self.source))
         self.driver = self.__setup_driver()
@@ -58,12 +59,12 @@ class NewsAPIScraper(GenericScraper):
             return wrapped_check
 
     @classmethod
-    def spawn(cls, src_name):
+    def spawn(cls, src_name, query_kws):
         """ Class factory that spawns our instances
 
         src_name: valid news source name compatible with news_api
         """
-        return cls(src_name)
+        return cls(src_name, query_kws)
 
     def get_articles(self):
         """ Infinite while-loop that queries the website for any
@@ -133,7 +134,7 @@ class NewsAPIScraper(GenericScraper):
         try:
             if ind is None:  # Only here if we've hit maximumResultsReached before
                 ind = 1
-            q = self.api.get_everything(q='bitcoin',
+            q = self.api.get_everything(q=','.join(self.query_kws),
                                         sources=self.source,
                                         language='en',
                                         page_size=page_size,
@@ -153,4 +154,4 @@ class NewsAPIScraper(GenericScraper):
         return q, ind + 1
 
 if __name__ == '__main__':
-    scraper = NewsAPIScraper('crypto-coins-news')  # Test name
+    scraper = NewsAPIScraper('crypto-coins-news', ['bitcoin'])  # Test name
