@@ -10,8 +10,8 @@ __STORAGE_PATH = 'BASE_PATH/news_data/{}'
 
 # where base_path is where you want to store the scraped data to
 
-KRAKEN_PATH = __STORAGE_PATH.format("kraken") + "{}"
-NEWS_PATH = __STORAGE_PATH.format("news") + "{}"
+KRAKEN_PATH = __STORAGE_PATH.format("kraken") + "/{}"
+NEWS_PATH = __STORAGE_PATH.format("news") + "/{}"
 
 ```
 
