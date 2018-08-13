@@ -1,10 +1,12 @@
+import time
 from abc import ABC, abstractmethod
+from constants import MODEL_WEIGHTS_PATH
 
 class BaseModel(ABC):
     """ All models MUST inherit from BaseModel, and use the provided methods
 
     """
-    def __init__(self, name: str, is_training: bool, path: str):
+    def __init__(self, name: str, is_training: bool):
         """
 
         :param name: Used in saving/loading of model. Use inheriting class' Name
@@ -12,31 +14,56 @@ class BaseModel(ABC):
         :param path: base path as in constants.py
         """
         self.name = name
-        self.is_training = is_training  # opposite means we're loading from a set of weights
-        self.path = path  # Path to load from
+        self.weights_path = MODEL_WEIGHTS_PATH.format(self.name)
+        self.model = None
 
-        if not self.is_training:
-            self.load_weights()
+    def train(self, train_x, train_y, test_x, test_y, test_error=None):
+        """ Wrapper around training/ validation for displaying
 
+        :param model:
+        :param x:
+        :param y:
+        :param is_train:
+        :return:
+        """
 
-    @classmethod
-    def spawn(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
+        ################################################
+        # Train, and get "cost" of training (training time)
+        ################################################
+        start = time.time()
+        self._train(train_x, train_y)
+        self.train_cost = time.time() - start
+        print('{} trained in {}'.format(self.name, self.train_cost))
+
+        ################################################
+        # Print out 
+        ################################################
+        if test_error is not None:  # FEED COST FUNCTION
+            y_pred = self.model.predict(test_x)
+            error = test_error(test_y, y_pred)
+            print('{} validation-score {}'.format(self.name, error))
 
 
     @abstractmethod
-    def predict(self):
-        pass
+    def _train(self, train_x, train_y):
+        raise NotImplementedError
 
+    @abstractmethod
+    def predict(self, data):
+        raise NotImplementedError
 
-    def save_weights(self):
-        """ Save the weights after training to a certain folder
-
-        :return:
-        """
-
-    def load_weights(self):
-        """ Loads the weights from training
+    @abstractmethod
+    def load(self):
+        """ Load in the weights
 
         :return:
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def save(self):
+        """ Save weights
+
+        :return:
+        """
+        raise NotImplementedError

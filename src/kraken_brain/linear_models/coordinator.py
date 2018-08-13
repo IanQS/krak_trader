@@ -5,7 +5,8 @@ a similar interface for the non-linear models
 Author: Ian Q.
 
 Notes:
-    
+    TODO: optimize balance between retraining && continuing with model
+        self.train_cost
 """
 
 from kraken_brain.linear_models.registered_models import registered
