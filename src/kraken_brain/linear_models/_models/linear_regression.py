@@ -18,9 +18,8 @@ from sklearn.linear_model import LinearRegression as lin_reg
 
 # Get price data
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.linear_models.utils import get_price_data
+from kraken_brain.linear_models.utils import get_price_data, process_data
 
-from sklearn.metrics import mean_squared_error
 import numpy as np
 
 
@@ -54,5 +53,6 @@ class LinearRegression(BaseModel):
         np.savez(self.weights_path, **variables)
 
 if __name__ == '__main__':
-    #model = LinearRegression()
+    model = LinearRegression()
     data = get_price_data(ALL_DATA, 'XXRPZUSD')
+    processed_data = process_data(data)

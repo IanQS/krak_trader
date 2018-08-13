@@ -1,6 +1,7 @@
 import time
 from abc import ABC, abstractmethod
 from constants import MODEL_WEIGHTS_PATH
+from sklearn.metrics import mean_squared_error
 
 class BaseModel(ABC):
     """ All models MUST inherit from BaseModel, and use the provided methods
@@ -32,14 +33,19 @@ class BaseModel(ABC):
         ################################################
         start = time.time()
         self._train(train_x, train_y)
+
+        # Parameters below are for optimization by the coordinator
         self.train_cost = time.time() - start
-        print('{} trained in {}'.format(self.name, self.train_cost))
+        self.training_error = mean_squared_error(train_y, self.predict(train_x))
+        print('{}: Trained in {} s, MSE of {}'.format(
+            self.name, self.train_cost, self.training_error)
+        )
 
         ################################################
         # Print out 
         ################################################
         if test_error is not None:  # FEED COST FUNCTION
-            y_pred = self.model.predict(test_x)
+            y_pred = self.predict(test_x)
             error = test_error(test_y, y_pred)
             print('{} validation-score {}'.format(self.name, error))
 
