@@ -30,6 +30,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
 PAGE_LOAD_TIME = 10 # num of seconds the async request will wait for a page to load before giving up
+WAIT_FACTOR = 3     # the factor of amount of time the second try will wait
 
 class NewsAPIScraper(GenericScraper):
     def __init__(self, source, query_kws):
@@ -50,18 +51,20 @@ class NewsAPIScraper(GenericScraper):
 
         driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=chrome_options)
         async_wait_first = WebDriverWait(driver, PAGE_LOAD_TIME)
-        async_wait_second = WebDriverWait(driver, PAGE_LOAD_TIME * 3)
+        async_wait_second = WebDriverWait(driver, PAGE_LOAD_TIME * WAIT_FACTOR)
         err_time = 'Selenium timed out after {} seconds for {} on {}'
         def wrapped_check(url):
             elem = None
             driver.get(url)
             try:
-                async_wait_first.until(expected_conditions.presence_of_element_located((By.XPATH, self.config["content-xpath"])))
+                async_wait_first.until(expected_conditions.visibility_of_element_located((By.XPATH, self.config["content-xpath"])))
             except TimeoutException: # first timeout, try again
                 try:
-                    async_wait_second.until(expected_conditions.presence_of_element_located((By.XPATH, self.config["content-xpath"])))
-                except TimeoutException: # second timeout, raise error
-                    raise TimeoutException(err_time.format(PAGE_LOAD_TIME, url, self.source))
+                    async_wait_second.until(expected_conditions.visibility_of_element_located((By.XPATH, self.config["content-xpath"])))
+                except TimeoutException: # second timeout, print error
+                    # TODO: different build modes - second mode should raise error instead
+                    # raise TimeoutException(err_time.format(PAGE_LOAD_TIME * (WAIT_FACTOR + 1), url, self.source))
+                    print(err_time.format(PAGE_LOAD_TIME * (WAIT_FACTOR + 1), url, self.source))
             else:
                 driver.execute_script("window.stop();")
                 elem = driver.find_element(By.XPATH, self.config["content-xpath"])
@@ -100,7 +103,7 @@ class NewsAPIScraper(GenericScraper):
 
     def _cleanup_content(self, content_raw):
         # TODO: add lxml tree and xpaths for content removal
-        return content_html
+        return content_raw
 
     def _process(self, query, content) -> dict:
         query['article'] = content
