@@ -29,7 +29,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
-PAGE_LOAD_TIME = 20 # num of seconds the async request will wait for a page to load, before giving up
+PAGE_LOAD_TIME = 10 # num of seconds the async request will wait for a page to load before giving up
 
 class NewsAPIScraper(GenericScraper):
     def __init__(self, source, query_kws):
@@ -48,23 +48,25 @@ class NewsAPIScraper(GenericScraper):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
 
-        sel_driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=chrome_options)
-        async_wait = WebDriverWait(driver, PAGE_LOAD_TIME)
-        err_none = 'Selenium returned None for {} on {}'
-        err_time = 'Selenium took longer than {} seconds for {} on {}'
+        driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=chrome_options)
+        async_wait_first = WebDriverWait(driver, PAGE_LOAD_TIME)
+        async_wait_second = WebDriverWait(driver, PAGE_LOAD_TIME * 3)
+        err_time = 'Selenium timed out after {} seconds for {} on {}'
         def wrapped_check(url):
             elem = None
-            sel_driver.get(url)
+            driver.get(url)
             try:
-                async_wait.until(expected_conditions.presence_of_element_located((By.XPATH, self.config["content-xpath"])))
-                sel_driver.execute_script("window.stop();")
-                elem = sel_driver.find_element(By.XPATH, self.config["content-xpath"])
-            except TimeoutException:
-                raise TimeoutException(err_time.format(PAGE_LOAD_TIME, url, self.source))
+                async_wait_first.until(expected_conditions.presence_of_element_located((By.XPATH, self.config["content-xpath"])))
+            except TimeoutException: # first timeout, try again
+                try:
+                    async_wait_second.until(expected_conditions.presence_of_element_located((By.XPATH, self.config["content-xpath"])))
+                except TimeoutException: # second timeout, raise error
+                    raise TimeoutException(err_time.format(PAGE_LOAD_TIME, url, self.source))
             else:
-                if elem is None:
-                    raise Exception(err_none.format(url, self.source))
-            return elem.get_attribute('outerHTML')
+                driver.execute_script("window.stop();")
+                elem = driver.find_element(By.XPATH, self.config["content-xpath"])
+
+                return elem
         return wrapped_check
 
     @classmethod
@@ -120,6 +122,10 @@ class NewsAPIScraper(GenericScraper):
             query = self.__substitution(query)
             if query['url'] not in self.seen_sites:
                 content_raw = self._fetch_website(query)
+                if content_raw is None:
+                    print("Content not found for {} on {}".format(query['url'], self.source))
+                    continue
+                content_raw = content_raw.get_attribute('outerHTML')
                 content = self._cleanup_content(content_raw)
                 processed_data = self._process(query, content)
                 self.save_article(**processed_data)
