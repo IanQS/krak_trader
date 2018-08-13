@@ -10,29 +10,17 @@ Notes:
 
 SITE_CONF = {
     "crypto-coins-news": {
-        "selenium": True,
         "api": True,
-        "html_tag": "div",
-        "tag_attributes": {
-            "class": "entry-content"
-        }
+        "content-xpath": "//div[@class='entry-content']"
     },
 
     "coin-telegraph": {
-        "selenium": True,
         "api": False,
-        "html_tag": "div",
-        "tag_attributes": {
-            "class" :"post-content"
-        }
+        "content-xpath": "//div[@class='post-content']"
     },
 
     "techcrunch": {
-        "selenium": True,
         "api": True,
-        "html_tag": "div",
-        "tag_attributes": {
-            "class": "article-content"
-        }
+        "content-xpath": "//div[@class='article-content']"
     }
 }

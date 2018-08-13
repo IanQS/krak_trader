@@ -21,10 +21,15 @@ from time import sleep as thread_swap # sleep to allow other threads to run
 from newsapi import NewsApiClient
 from newsapi.newsapi_exception import NewsAPIException
 
-import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+
+PAGE_LOAD_TIME = 20 # num of seconds the async request will wait for a page to load, before giving up
 
 class NewsAPIScraper(GenericScraper):
     def __init__(self, source, query_kws):
@@ -33,30 +38,34 @@ class NewsAPIScraper(GenericScraper):
         self.query_kws = query_kws
         assert source in SITE_CONF.keys()  # Only scrape on websites we've configured
         super().__init__('/{}'.format(self.source))
+        self.config = SITE_CONF[source]
         self.driver = self.__setup_driver()
         self.get_articles()
 
-
     def __setup_driver(self):
-        if SITE_CONF[self.source]['selenium']:
-            chrome_options = Options()
-            chrome_options.add_argument("--headless")
-            sel_driver = webdriver.Chrome(chrome_options=chrome_options)
-            err_m = 'Selenium returned None for {} on {}'
-            def wrapped_check(url):
-                sel_driver.get(url)
-                if sel_driver.page_source is None:
-                    raise Exception(err_m.format(url, self.source))
-                return sel_driver.page_source
-            return wrapped_check
-        else:
-            err_m = 'Requests Lib returned None for {} on {}'
-            def wrapped_check(url):
-                data = requests.get(url)
-                if data is None:
-                    raise Exception(err_m.format(url, self.source))
-                return data.text
-            return wrapped_check
+        capabilities = DesiredCapabilities.CHROME
+        capabilities["pageLoadStrategy"] = "none"
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+
+        sel_driver = webdriver.Chrome(desired_capabilities=capabilities, chrome_options=chrome_options)
+        async_wait = WebDriverWait(driver, PAGE_LOAD_TIME)
+        err_none = 'Selenium returned None for {} on {}'
+        err_time = 'Selenium took longer than {} seconds for {} on {}'
+        def wrapped_check(url):
+            elem = None
+            sel_driver.get(url)
+            try:
+                async_wait.until(expected_conditions.presence_of_element_located((By.XPATH, self.config["content-xpath"])))
+                sel_driver.execute_script("window.stop();")
+                elem = sel_driver.find_element(By.XPATH, self.config["content-xpath"])
+            except TimeoutException:
+                raise TimeoutException(err_time.format(PAGE_LOAD_TIME, url, self.source))
+            else:
+                if elem is None:
+                    raise Exception(err_none.format(url, self.source))
+            return elem.get_attribute('outerHTML')
+        return wrapped_check
 
     @classmethod
     def spawn(cls, src_name, query_kws):
@@ -84,17 +93,15 @@ class NewsAPIScraper(GenericScraper):
 
     def _fetch_website(self, query):
         print(query['url'])
-        data = self.driver(query['url'])
 
-        return BeautifulSoup(data, 'html.parser')
+        return self.driver(query['url'])
 
-    def _process(self, query, soup) -> dict:
-        config = SITE_CONF[query['source']['id']]
-        query["article"] = str(soup.find(config["html_tag"], config["tag_attributes"]))
+    def _cleanup_content(self, content_raw):
+        # TODO: add lxml tree and xpaths for content removal
+        return content_html
 
-        if query["article"] == "None": # query['article'] is None when content not found, log this error
-            # TODO: log this error somewhere
-            print("Error: Article not found for {}".format(query['url']))
+    def _process(self, query, content) -> dict:
+        query['article'] = content
 
         holder = {}
         for access_key in ['article', 'url', 'date', 'site', 'author']:
@@ -112,8 +119,9 @@ class NewsAPIScraper(GenericScraper):
         for query in query_results["articles"]:
             query = self.__substitution(query)
             if query['url'] not in self.seen_sites:
-                soup = self._fetch_website(query)
-                processed_data = self._process(query, soup)
+                content_raw = self._fetch_website(query)
+                content = self._cleanup_content(content_raw)
+                processed_data = self._process(query, content)
                 self.save_article(**processed_data)
                 thread_swap(0.1)
             else:
