@@ -23,4 +23,5 @@ def get_price_data(data_path: str, currency: str):
     return np.asarray(price_volume)
 
 def process_data(data):
-    pass
+    fake_example = data[0, :], data[1, :], data[2, :], data[3, :]
+    raise NotImplementedError

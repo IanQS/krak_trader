@@ -24,15 +24,15 @@ import numpy as np
 
 
 class LinearRegression(BaseModel):
-    def __init__(self):
+    def __init__(self, pre_processing=None):
         super().__init__(self.__class__.__name__)
         self.model = lin_reg()
+        self.pre_processor = pre_processing
 
     def _train(self, train_x, train_y):
         self.model.fit(train_x, train_y)
 
-
-    def predict(self, data):
+    def _predict(self, data):
         """ Data has same shape as train_X (except for minibatch size, obv)
 
         :param data:
@@ -40,19 +40,24 @@ class LinearRegression(BaseModel):
         """
         self.model.predict(data)
 
-
     def load(self):
         vars_ = np.load('/tmp/trash_weights.npz')
         for k, v in vars_.items():
             setattr(self.model, k, v)
+        self.trained = True
 
-
-    def save(self):
+    def _save(self):
         variables = {'coef_': self.model.coef_,
                      'intercept_': self.model.intercept_}
         np.savez(self.weights_path, **variables)
 
+
 if __name__ == '__main__':
-    model = LinearRegression()
+    model = LinearRegression(process_data)
     data = get_price_data(ALL_DATA, 'XXRPZUSD')
-    processed_data = process_data(data)
+    if model.pre_processor is not None:
+        data = model.pre_processor(data)
+
+    # construct pre_processor such that it returns in the format appropriate
+    # for doing *data
+    model.train(*data)
