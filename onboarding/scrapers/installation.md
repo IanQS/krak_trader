@@ -7,8 +7,8 @@ We utilize various packages for our scrapers. This document serves to guide thei
 This method, however, does not install ChromeDriver used as part of Selenium because it is independent of pip. [More details.](#chromedriver-for-selenium)
 
 # Method 2: Installing the scraping packages individually
-## Pip Packages (Requests, Selenium, BeautifulSoup)
-In your virtualenv, run `pip3 install requests && pip3 install selenium && pip3 install bs4`.
+## Pip Packages (Selenium)
+In your virtualenv, run `pip3 install selenium`.
 
 ## ChromeDriver for Selenium
 Chrome is used as it supports headless browsing, i.e. an instance of Chrome does not need to be opened every time a webpage is queried. Installation: 

@@ -10,29 +10,35 @@ Notes:
 
 SITE_CONF = {
     "crypto-coins-news": {
-        "selenium": True,
         "api": True,
-        "html_tag": "div",
-        "tag_attributes": {
-            "class": "entry-content"
-        }
+        "content-xpath": "//div[@class='entry-content']"
     },
 
     "coin-telegraph": {
-        "selenium": True,
         "api": False,
-        "html_tag": "div",
-        "tag_attributes": {
-            "class" :"post-content"
-        }
+        "content-xpath": "//div[@class='post-content']"
     },
 
     "techcrunch": {
-        "selenium": True,
         "api": True,
-        "html_tag": "div",
-        "tag_attributes": {
-            "class": "article-content"
-        }
+        "content-xpath": "//div[@class='article-content']"
+    },
+
+# bloomberg blocks bots lol
+#    "bloomberg": {
+#        "api": True,
+#        "content-xpath": "//div[@class'body-copy-v2 fence-body']"
+#    },
+
+# business insider changes their HTML based on location, below is US
+    "business-insider": {
+        "api": True,
+        "content-xpath": "//section[@data-post-type='post']/div/div[2]"
+    },
+
+# NewsApi returns some dead articles
+    "the-new-york-times": {
+        "api": True,
+        "content-xpath": "//article[@id='story']"
     }
 }
