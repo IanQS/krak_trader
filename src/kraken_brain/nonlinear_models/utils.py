@@ -1,6 +1,7 @@
 import numpy as np
+from kraken_brain.trader_configs import ZERO_PLACEHOLDER
 from sklearn.preprocessing import normalize
-
+from sklearn.preprocessing import Imputer
 
 def ob_diff(data, final_shape=None, percentagize=False):
     assert final_shape is not None
@@ -60,34 +61,53 @@ def custom_scale(data: np.array, final_shape: tuple) -> np.ndarray:
     data = np.moveaxis(np.asarray(holder), 0, -1)
     return data.reshape(final_shape)
 
-def construct_windows(data: np.array, x_window_len: int, y_window_len: int, diff: bool, normalize = False):
+def construct_windows(data: list, x_window_len: int, y_window_len: int,
+                      diff: bool = False, pct_diff = False, normalize = False):
     """
-    Construct frames of window_length from data. We normalize all the values according
-    to the first value
+    Construct frames of window_length from data. We grab a window of length (x_window_len + y_window_len), and use
+    the first element as the baseline.
 
+    diff -> subtract baseline from window
+    pct_diff -> subtract then divide by baseline
+    normalize -> divide by baseline
+
+    TODO: Optimize and handle just the indices next time.
     """
-    if not isinstance(data, np.array):
-        data = np.asarray(data)
-    assert len(data.shape) == 1, 'construct_window only supports vectors for now'
 
     X_data = []
     y_data = []
-    for i in range(len(data) - (x_window_len + y_window_len)):
-        x_start, x_end = i, i + x_window_len
-        y_start, y_end = x_end, x_end + y_window_len
+    window_length = x_window_len + y_window_len
+    for chunk in data:  # first iterate the "npz files"
+        ################################################
+        # Type checking
+        ################################################
+        if not isinstance(chunk, np.ndarray):
+            chunk = np.asarray(chunk)
+        assert len(chunk.shape) == 1, 'construct_window only supports vectors for now'
 
-        x = data[x_start: x_end]
-        y = data[y_start: y_end]
+        # Have to impute bc we sometimes get 0s while scraping
+        chunk = chunk.reshape(-1, 1)
+        imp = Imputer(missing_values=0, strategy='mean', axis=0)
+        processed_chunk = imp.fit_transform(chunk)
+        for i in range(0, len(processed_chunk) - window_length, window_length // 2):  # then, chunk them up
+            x_start, x_end = i, i + x_window_len
+            y_start, y_end = x_end, x_end + y_window_len
 
-        base = x[0]
-        if normalize:
-            X_data.append((x - base) / base)
-            y_data.append((y - base) / base)
-        elif diff:
-            X_data.append((x - base))
-            y_data.append((y - base))
-        else:
-            X_data.append(x)
-            y_data.append(y)
+            x = processed_chunk[x_start: x_end]
+            y = processed_chunk[y_start: y_end]
+
+            base = x[0]
+            if pct_diff:
+                X_data.append((x - base) / base)
+                y_data.append((y - base) / base)
+            elif diff:
+                X_data.append(x - base)
+                y_data.append(y - base)
+            elif normalize:
+                X_data.append(x / base)
+                y_data.append(y / base)
+            else:
+                X_data.append(x)
+                y_data.append(y)
 
     return np.asarray(X_data), np.asarray(y_data)

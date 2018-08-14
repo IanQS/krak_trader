@@ -13,7 +13,14 @@ import tensorflow as tf
 
 # Get price data
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.linear_models.utils import get_price_data, process_data
+from kraken_brain.linear_models.utils import get_price_data
+from kraken_brain.nonlinear_models.utils import construct_windows
+
+# Rolling window
+WiNDOW_X = 15
+WINDOW_Y = 3
+
+TEST = False
 
 class LSTM_Regressor(object):
     def __init__(self, sess):
@@ -47,6 +54,16 @@ class LSTM_Regressor(object):
 
 
 if __name__ == "__main__":
-    print(ALL_DATA)
+    ################################################
+    # Grab training data
+    ################################################
     data = get_price_data(ALL_DATA, 'XXRPZUSD')
-    print(len(data))
+    processed_data = [datum[:, 0] for datum in data]
+    x, y = construct_windows(processed_data, WiNDOW_X, WINDOW_Y, normalize=True)
+    print('Training samples: {}'.format(len(x)))
+
+
+    if TEST:
+        test_data = get_price_data(ALL_DATA, 'EOSUSD')
+        test_processed_data = [datum[:, 0] for datum in test_data]
+        test_x, test_y = construct_windows(test_processed_data, WiNDOW_X, WINDOW_Y, normalize=True)

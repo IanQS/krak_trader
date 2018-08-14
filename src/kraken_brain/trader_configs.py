@@ -1,6 +1,8 @@
 from constants import KRAKEN_PATH
 import os
 
+ZERO_PLACEHOLDER = 1e-10  # When we try to normalize, we may encounter 0s, so we
+
 SUMMARY_PATH = './summaries/{}'
 
 CONV_INPUT_SHAPE = [100, 2, 2]
