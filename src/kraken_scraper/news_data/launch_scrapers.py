@@ -31,7 +31,6 @@ if __name__ == '__main__':
         news_thread.start()
 
     # Launch all the non-news api compatible sites
-    # TODO: Implement them, and register them
 
     # Keeps main connection alive until all connections are "done"
     for news_thread in all_threads:

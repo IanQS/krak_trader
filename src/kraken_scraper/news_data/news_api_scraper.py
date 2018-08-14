@@ -61,9 +61,7 @@ class NewsAPIScraper(GenericScraper):
             except TimeoutException: # first timeout, try again
                 try:
                     async_wait_second.until(expected_conditions.visibility_of_element_located((By.XPATH, self.config["content-xpath"])))
-                except TimeoutException: # second timeout, print error
-
-                    # raise TimeoutException(err_time.format(PAGE_LOAD_TIME * (WAIT_FACTOR + 1), url, self.source))
+                except TimeoutException: # second timeout, print/raise error
                     print(err_time.format(PAGE_LOAD_TIME * (WAIT_FACTOR + 1), url, self.source))
             else:
                 driver.execute_script("window.stop();")
@@ -100,7 +98,6 @@ class NewsAPIScraper(GenericScraper):
         return self.driver(query['url'])
 
     def _cleanup_content(self, content_raw):
-        # TODO: add lxml tree and xpaths for content removal
         return content_raw
 
     def _process(self, query, content) -> dict:
