@@ -62,7 +62,7 @@ class NewsAPIScraper(GenericScraper):
                 try:
                     async_wait_second.until(expected_conditions.visibility_of_element_located((By.XPATH, self.config["content-xpath"])))
                 except TimeoutException: # second timeout, print error
-                    # TODO: different build modes - second mode should raise error instead
+
                     # raise TimeoutException(err_time.format(PAGE_LOAD_TIME * (WAIT_FACTOR + 1), url, self.source))
                     print(err_time.format(PAGE_LOAD_TIME * (WAIT_FACTOR + 1), url, self.source))
             else:
@@ -97,8 +97,6 @@ class NewsAPIScraper(GenericScraper):
             thread_swap(1)
 
     def _fetch_website(self, query):
-        print(query['url'])
-
         return self.driver(query['url'])
 
     def _cleanup_content(self, content_raw):
@@ -124,6 +122,7 @@ class NewsAPIScraper(GenericScraper):
         for query in query_results["articles"]:
             query = self.__substitution(query)
             if query['url'] not in self.seen_sites:
+                print(query['url'])
                 content_raw = self._fetch_website(query)
                 if content_raw is None:
                     print("Content not found for {} on {}".format(query['url'], self.source))
@@ -133,8 +132,6 @@ class NewsAPIScraper(GenericScraper):
                 processed_data = self._process(query, content)
                 self.save_article(**processed_data)
                 thread_swap(0.1)
-            else:
-                print("Skipping {}".format(query['url']))
 
     def __substitution(self, query: dict):
         """ Fixes query to have the fields expected by our saver
