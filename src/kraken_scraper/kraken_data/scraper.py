@@ -32,7 +32,6 @@ class Scraper(object):
         insertions = 0
         self.start = time.time()
         display = tqdm(total=STORAGE_SIZE)
-        errors = 0
         while True:
             # TQDM update
             display.update(1)
@@ -44,10 +43,6 @@ class Scraper(object):
                     display.close()
                     processed_data, insertions = self.write_data(processed_data)
                     display = tqdm(total=STORAGE_SIZE)
-            else:
-                errors += 1
-                if errors >= FAULTS:
-                    self._cleanup(res, display)
 
 
     def write_data(self, processed_data: dict) -> tuple:
@@ -78,7 +73,7 @@ class Scraper(object):
             res = self.scraper.query_public('Ticker', {'pair': ','.join(self.pairs)})
         except Exception as e:
             print('Error querying Ticker data: {}'.format(e))
-            time.sleep(1)
+            time.sleep(0.5)
             res = self.scraper.query_public('Ticker', {'pair': ','.join(self.pairs)})
         if res is None:
             raise TypeError('Result from ticker query should not be None')

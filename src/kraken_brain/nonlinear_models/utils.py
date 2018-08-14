@@ -59,3 +59,35 @@ def custom_scale(data: np.array, final_shape: tuple) -> np.ndarray:
             holder.append(normalize(data_))
     data = np.moveaxis(np.asarray(holder), 0, -1)
     return data.reshape(final_shape)
+
+def construct_windows(data: np.array, x_window_len: int, y_window_len: int, diff: bool, normalize = False):
+    """
+    Construct frames of window_length from data. We normalize all the values according
+    to the first value
+
+    """
+    if not isinstance(data, np.array):
+        data = np.asarray(data)
+    assert len(data.shape) == 1, 'construct_window only supports vectors for now'
+
+    X_data = []
+    y_data = []
+    for i in range(len(data) - (x_window_len + y_window_len)):
+        x_start, x_end = i, i + x_window_len
+        y_start, y_end = x_end, x_end + y_window_len
+
+        x = data[x_start: x_end]
+        y = data[y_start: y_end]
+
+        base = x[0]
+        if normalize:
+            X_data.append((x - base) / base)
+            y_data.append((y - base) / base)
+        elif diff:
+            X_data.append((x - base))
+            y_data.append((y - base))
+        else:
+            X_data.append(x)
+            y_data.append(y)
+
+    return np.asarray(X_data), np.asarray(y_data)
