@@ -1,6 +1,10 @@
 """
 lstm.py -> basic LSTM
 
+Largely inspired by
+    Stanford CS20:
+        RNN lecture
+        https://web.stanford.edu/class/cs20si/syllabus.html
 
 Author: Ian Q.
 
@@ -12,7 +16,7 @@ Notes:
 import tensorflow as tf
 
 # Get price data
-from kraken_brain.trader_configs import ALL_DATA
+from kraken_brain.trader_configs import ALL_DATA, LSTM_CONFIG
 from kraken_brain.linear_models.utils import get_price_data
 from kraken_brain.nonlinear_models.utils import construct_windows
 
@@ -23,34 +27,34 @@ WINDOW_Y = 3
 TEST = False
 
 class LSTM_Regressor(object):
-    def __init__(self, sess):
+    def __init__(self, sess, config):
         self.sess = sess
-        n_steps = seq_len - 1
-        n_inputs = 4
-        n_neurons = 200
-        n_outputs = 4
-        n_layers = 2
-        learning_rate = 0.001
-        batch_size = 50
-        n_epochs = 100
+        config.overwrite(dict(x_window_size=WiNDOW_X, y_window_size=WINDOW_Y))
+        for k, v in config.expose():
+            setattr(self, k, v)
+        self.config = config
 
-        self._initialize_model()
-        self.train_op = self._construct_training()
-
-    def _initialize_model(self):
-        self.X = tf.placeholder(tf.float32, [None, self.steps, self.inputs])
-        self.y = tf.placeholder(tf.float32, [None, self.outputs])
+        self._construct_training_ops()
 
 
+    def _construct_training_ops(self):
+        self.x = tf.placeholder(tf.float32, [None, self.x_window_size])
+        self.y = tf.placeholder(tf.float32, [None, self.y_window_size])
+        self.lr = tf.placeholder(tf.float32, None)
 
+    def _construct_model(self):
+        hidden_units = self.hidden_units
+        if isinstance(hidden_units, int):
+            hidden_units = [self.hidden_units for _ in range(len(self.num_layers))]
 
-        self.outputs = None
+        if self.num_layers == 1:
+            cells = tf.nn.rnn_cell.LSTMCell(hidden_units[0], activation=tf.nn.relu)
+        else:
+            layers = [tf.nn.rnn_cell.GRUCell(size) for size in hidden_units]
+            cells = tf.nn.rnn_cell.MultiRNNCell(layers)
+        output, output_states = tf.nn.dynamic_rnn(cells, self.x, dtype=tf.float32)
 
     def _construct_training(self):
-        loss = tf.reduce_mean(tf.square(outputs - self.y))  # loss function = mean squared error
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        training_op = optimizer.minimize(loss)
-        return training_op
 
 
 if __name__ == "__main__":
@@ -61,6 +65,13 @@ if __name__ == "__main__":
     processed_data = [datum[:, 0] for datum in data]
     x, y = construct_windows(processed_data, WiNDOW_X, WINDOW_Y, normalize=True)
     print('Training samples: {}'.format(len(x)))
+
+    ################################################
+    # Training procedure
+    ################################################
+
+    config = LSTM_CONFIG()
+
 
 
     if TEST:
