@@ -38,7 +38,7 @@ class LinearRegression(BaseModel):
         :param data:
         :return:
         """
-        self.model.predict(data)
+        return self.model.predict(data)
 
     def load(self):
         vars_ = np.load('/tmp/trash_weights.npz')
