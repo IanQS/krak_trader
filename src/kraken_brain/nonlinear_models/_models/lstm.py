@@ -21,7 +21,7 @@ from kraken_brain.linear_models.utils import get_price_data
 from kraken_brain.nonlinear_models.utils import construct_windows
 
 # Rolling window
-WiNDOW_X = 15
+WINDOW_X = 15
 WINDOW_Y = 3
 
 TEST = False
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     ################################################
     data = get_price_data(ALL_DATA, 'XXRPZUSD')
     processed_data = [datum[:, 0] for datum in data]
-    x, y = construct_windows(processed_data, WiNDOW_X, WINDOW_Y, normalize=True)
+    x, y = construct_windows(processed_data, WINDOW_X, WINDOW_Y, normalize=True)
     print('Training samples: {}'.format(len(x)))
 
     ################################################
@@ -77,4 +77,4 @@ if __name__ == "__main__":
     if TEST:
         test_data = get_price_data(ALL_DATA, 'EOSUSD')
         test_processed_data = [datum[:, 0] for datum in test_data]
-        test_x, test_y = construct_windows(test_processed_data, WiNDOW_X, WINDOW_Y, normalize=True)
+        test_x, test_y = construct_windows(test_processed_data, WINDOW_X, WINDOW_Y, normalize=True)
