@@ -1,5 +1,10 @@
 """
-Builds basic_rnn.py from _experiments. Uses a sliding window in predictions
+Builds basic_rnn.py from _experiments. Uses a sliding window in predictions.
+
+Produces prediction of predict_ahead from
+    [x_t - window_length, .... x_t] -> [x_t - window_length + predict_ahead, ..., x_t + predict_ahead]
+
+    so grab the last predict_ahead values to get the prediction
 
 
 Author: Ian Q.
@@ -9,6 +14,7 @@ Notes:
 """
 import time
 
+import numpy as np
 import tensorflow as tf
 from kraken_brain.linear_models._models.base_model import BaseModel
 from kraken_brain.utils import toy_data_generator
@@ -83,8 +89,6 @@ class RNN_Regressor(BaseModel):
             if iteration % 100 == 0:
                 mse, preds = self.sess.run([self.loss, self.model], feed_dict={self.X: X_batch, self.y: y_batch})
                 print(iteration, "\tMSE:", mse)
-                print(preds[0])
-                print(X_batch[0][-1])
 
     def _predict(self, data):
         """ Data has same shape as train_X (except for minibatch size, obv)
@@ -100,6 +104,19 @@ class RNN_Regressor(BaseModel):
     def _save(self):
         pass
 
+    def test(self, data):
+        print(data)
+        res = self.sess.run([self.model], feed_dict={self.X: data})
+        print(res)
+        return res
+
 if __name__ == '__main__':
     test_class = RNN_Regressor()
     test_class.train(None, None, None, None, None)
+
+
+    start = 1
+    generate_new = np.arange(start, start + test_class.n_steps)
+    generate_new = np.expand_dims(generate_new, -1)
+    generate_new = np.expand_dims(generate_new, 0)
+    test_class.test(generate_new)
