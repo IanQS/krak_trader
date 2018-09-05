@@ -49,7 +49,7 @@ class BaseModel(ABC):
     def predict(self, data):
         if not self.trained:
             raise Exception('Predict called on untrained {}'.format(self.name))
-        self._predict(data)
+        return self._predict(data)
 
     @abstractmethod
     def _predict(self, data):
