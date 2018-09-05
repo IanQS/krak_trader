@@ -50,7 +50,6 @@ class ConvolutionalAE(Autoencoder):
         base_loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss = tf.add_n([base_loss] + reg_losses, name="loss")
-
         cost = tf.reduce_mean(loss)
         return super()._train_construction(cost)
 

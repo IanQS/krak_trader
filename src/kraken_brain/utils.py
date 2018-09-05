@@ -8,7 +8,10 @@ Notes:
 """
 
 import os
+
+import numpy as np
 import tensorflow as tf
+from typing import Tuple
 
 def variable_summaries(var, name):
     """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
@@ -34,3 +37,20 @@ def clear_tensorboard(path: str):
                 os.unlink(file_path)
         except Exception as e:
             print(e)
+
+
+def next_batch(batch_size: int, n_steps: int, predict_ahead: int) -> Tuple[np.ndarray, np.ndarray]:
+    """ Generates toy data from a sequence of integers
+
+    [Batch_size, n_steps, 1] -> Assuming that we have 1 feature
+
+    :param batch_size:
+    :param n_steps: number of time steps.
+    :param predict_ahead:
+    :return:
+    """
+    start = np.random.randint(low=0, high=100, size=(batch_size, 1))
+    sequences = start + np.arange(0, n_steps + predict_ahead)
+    X = np.expand_dims(sequences[:, :-predict_ahead], -1)
+    y = np.expand_dims(sequences[:, predict_ahead:], -1)
+    return X, y
