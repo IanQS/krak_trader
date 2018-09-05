@@ -39,7 +39,7 @@ def clear_tensorboard(path: str):
             print(e)
 
 
-def next_batch(batch_size: int, n_steps: int, predict_ahead: int) -> Tuple[np.ndarray, np.ndarray]:
+def toy_data_generator(batch_size: int, n_steps: int, predict_ahead: int) -> Tuple[np.ndarray, np.ndarray]:
     """ Generates toy data from a sequence of integers
 
     [Batch_size, n_steps, 1] -> Assuming that we have 1 feature

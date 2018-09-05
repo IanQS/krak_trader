@@ -1,7 +1,7 @@
 import tensorflow as tf
 import time
 
-from kraken_brain.utils import next_batch
+from kraken_brain.utils import toy_data_generator
 
 
 def construct_graph(n_steps, n_inputs, n_neurons, n_outputs):
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         init.run()
         start = time.time()
         for iteration in range(n_iterations):
-            X_batch, y_batch = next_batch(batch_size, n_steps, predict_ahead)
+            X_batch, y_batch = toy_data_generator(batch_size, n_steps, predict_ahead)
             sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
             if iteration % 100 == 0:
                 mse, preds = sess.run([loss, outputs], feed_dict={X: X_batch, y: y_batch})

@@ -29,7 +29,7 @@ TEST = False
 class LSTM_Regressor(object):
     def __init__(self, sess, config):
         self.sess = sess
-        config.overwrite(dict(x_window_size=WiNDOW_X, y_window_size=WINDOW_Y))
+        config.overwrite(dict(x_window_size=WINDOW_X, y_window_size=WINDOW_Y))
         for k, v in config.expose():
             setattr(self, k, v)
         self.config = config
@@ -55,6 +55,7 @@ class LSTM_Regressor(object):
         output, output_states = tf.nn.dynamic_rnn(cells, self.x, dtype=tf.float32)
 
     def _construct_training(self):
+        pass
 
 
 if __name__ == "__main__":

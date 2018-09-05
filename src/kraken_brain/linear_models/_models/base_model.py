@@ -23,7 +23,7 @@ class BaseModel(ABC):
         ################################################
         start = time.time()
         self._train(train_x, train_y)
-
+        self.trained = True
         ################################################
         # Metadata for controller
         ################################################
@@ -32,7 +32,7 @@ class BaseModel(ABC):
         print('{}: Trained in {} s, MSE of {}'.format(
             self.name, self.train_cost, self.training_error)
         )
-        self.trained = True
+
 
         ################################################
         # Print out validation score if wanted
