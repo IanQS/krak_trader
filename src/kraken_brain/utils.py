@@ -8,6 +8,7 @@ Notes:
 """
 
 import os
+import sys
 
 import numpy as np
 import tensorflow as tf
@@ -52,5 +53,5 @@ def toy_data_generator(batch_size: int, n_steps: int, predict_ahead: int) -> Tup
     start = np.random.randint(low=0, high=100, size=(batch_size, 1))
     sequences = start + np.arange(0, n_steps + predict_ahead)
     X = np.expand_dims(sequences[:, :-predict_ahead], -1)
-    y = np.expand_dims(sequences[:, predict_ahead:], -1)
+    y = np.expand_dims(sequences[:, -predict_ahead:], -1)
     return X, y

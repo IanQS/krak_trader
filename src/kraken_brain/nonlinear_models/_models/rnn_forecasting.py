@@ -30,26 +30,32 @@ class RNN_Regressor(BaseModel):
         self.sess = tf.Session()
         self.pre_processor = pre_processing
 
-        self.n_steps = 20
+        self.n_steps = 50
         self.n_inputs = 1  # Dimensionality of input
         self.n_outputs = 1  # Dimensionality of output
-        self.n_neurons = 100  # Fixed neuron number for all layers
-        self.learning_rate = 0.001
-        self.n_iterations = 1500
+        self.n_neurons = 200  # Fixed neuron number for all layers
+        self.learning_rate = 0.01
+        self.n_iterations = 2000
         self.batch_size = 50
-        self.predict_ahead = 2
+        self.predict_ahead = 5
 
 
 
     def _construct_graph(self):
         X = tf.placeholder(tf.float32, [None, self.n_steps, self.n_inputs])
-        y = tf.placeholder(tf.float32, [None, self.n_steps, self.n_outputs])
+        y = tf.placeholder(tf.float32, [None, self.predict_ahead, self.n_outputs])
         cell = tf.contrib.rnn.BasicRNNCell(num_units=self.n_neurons, activation=tf.nn.relu)
         rnn_outputs, states = tf.nn.dynamic_rnn(cell, X, dtype=tf.float32)
-
-        stacked_rnn_outputs = tf.reshape(rnn_outputs, [-1, self.n_neurons])
+        print(rnn_outputs)
+        indices = tf.Variable(list(range(self.n_steps - self.predict_ahead, self.n_steps)), tf.float32)
+        gathered = tf.gather(rnn_outputs,
+                             indices,
+                             axis=1)
+        print(gathered)
+        stacked_rnn_outputs = tf.reshape(gathered, [-1, self.n_neurons])
         stacked_outputs = tf.layers.dense(stacked_rnn_outputs, self.n_outputs)
-        outputs = tf.reshape(stacked_outputs, [-1, self.n_steps, self.n_outputs])
+        outputs = tf.reshape(stacked_outputs, [-1, self.predict_ahead, self.n_outputs])
+
         return X, y, outputs
 
     def _construct_training_method(self, outputs, y,):
@@ -68,8 +74,6 @@ class RNN_Regressor(BaseModel):
         start = time.time()
         self._train(train_x, train_y)
         self.trained = True
-
-
 
         ################################################
         # Print out validation score if wanted
@@ -105,9 +109,10 @@ class RNN_Regressor(BaseModel):
         pass
 
     def test(self, data):
-        print(data)
+        print('Start: {}. Lookahead: {}'.format(data[0, -1,0], self.predict_ahead))
         res = self.sess.run([self.model], feed_dict={self.X: data})
-        print(res)
+        res = np.asarray(res)
+        print('Predicted: \n{}'.format(res[0,0, -self.predict_ahead:,0]))
         return res
 
 if __name__ == '__main__':
