@@ -15,12 +15,11 @@ Notes:
 # Model things - base class, and sklearn model to be wrapped
 from kraken_brain.linear_models._models.base_model import BaseModel
 from sklearn.linear_model import LinearRegression as lin_reg
+from sklearn.externals import joblib
 
 # Get price data
 from kraken_brain.trader_configs import ALL_DATA
 from kraken_brain.linear_models.utils import get_price_data, process_data
-
-import numpy as np
 
 
 class LinearRegression(BaseModel):
@@ -41,15 +40,11 @@ class LinearRegression(BaseModel):
         return self.model.predict(data)
 
     def load(self):
-        vars_ = np.load('/tmp/trash_weights.npz')
-        for k, v in vars_.items():
-            setattr(self.model, k, v)
+        self.model = joblib.load('linreg.pkl')
         self.trained = True
 
     def _save(self):
-        variables = {'coef_': self.model.coef_,
-                     'intercept_': self.model.intercept_}
-        np.savez(self.weights_path, **variables)
+        joblib.dump(self.model, 'linreg.pkl')
 
 
 if __name__ == '__main__':
