@@ -8,7 +8,7 @@ from .autoencoder_base import Autoencoder
 import tensorflow as tf
 from kraken_brain.trader_configs import ALL_DATA, CONV_INPUT_SHAPE
 from kraken_brain.utils import variable_summaries
-from kraken_brain.video_to_predictions.orderbook_embedding.utils import split_data, get_image_from_np, custom_scale
+from kraken_brain.nonlinear_models.utils import split_data, get_image_from_np, custom_scale
 
 
 class ConvolutionalAE(Autoencoder):
@@ -50,7 +50,6 @@ class ConvolutionalAE(Autoencoder):
         base_loss = tf.losses.mean_squared_error(labels=self.encoder_input, predictions=self.decoder)
         reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss = tf.add_n([base_loss] + reg_losses, name="loss")
-
         cost = tf.reduce_mean(loss)
         return super()._train_construction(cost)
 

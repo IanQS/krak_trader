@@ -5,7 +5,7 @@ Author: Ian Q
 """
 
 from kraken_brain.trader_configs import ALL_DATA
-from kraken_brain.video_to_predictions.orderbook_embedding.utils import get_image_from_np, custom_scale
+from kraken_brain.nonlinear_models.utils import get_image_from_np, custom_scale
 
 from keras.layers import Input, Dense, Flatten, Reshape
 from keras.layers.normalization import BatchNormalization
